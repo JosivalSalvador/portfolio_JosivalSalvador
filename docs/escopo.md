@@ -134,18 +134,22 @@ Funciona como a **prova de conhecimento** do portfólio.
 
 - Lista com todos os cursos e certificações concluídos.
 - Cada item exibe: **título**, **instituição emissora** e **data de emissão**.
+- A **grade do curso** (o que foi ensinado) não aparece nos itens do mural, para mantê-lo compacto. Ela é exibida ao abrir o certificado (ver 5.3).
 
 ### 5.2 Filtro por categoria temática
 
 - O visitante filtra o mural por área (ex.: apenas *Back-end*, apenas *Cloud/DevOps*, *Arquitetura*).
 - Sem filtro aplicado, todos os certificados são exibidos.
 
-### 5.3 Validação
+### 5.3 Detalhes e validação
 
-Cada certificado oferece pelo menos um meio de comprovação:
+Ao selecionar um certificado, o visitante abre um **modal de detalhes**, sem sair da página, com:
 
-- **Link de verificação oficial** da instituição/plataforma emissora (credencial externa).
-- **Modal** para visualizar a imagem do comprovante ou diploma sem sair da página.
+- **Grade do curso:** o que foi ensinado.
+- **Imagem do comprovante ou diploma** (quando houver).
+- **Link de verificação oficial** da instituição/plataforma emissora (quando houver), que leva à credencial externa.
+
+Cada certificado oferece pelo menos um meio de comprovação: o link de verificação oficial ou a imagem do comprovante.
 
 ---
 
@@ -162,9 +166,9 @@ Cada certificado oferece pelo menos um meio de comprovação:
 
 ### 6.2 Funcionalidades do administrador (`ADMIN`)
 
-- Cadastrar, editar e excluir **projetos** (incluindo notas de arquitetura, desafios e soluções, links e capa).
+- Cadastrar, editar e excluir **projetos** (incluindo notas de arquitetura, decisões de tecnologia, desafios e soluções, links e capa).
 - Gerenciar **tecnologias** e associá-las aos projetos.
-- Cadastrar, editar e excluir **certificados**.
+- Cadastrar, editar e excluir **certificados** (incluindo a grade do curso).
 - Registrar e atualizar o **histórico de releases** (formulário interno, complementando a sincronização automática com o GitHub).
 
 ### 6.3 Modo Convidado / Leitura (`GUEST`)
@@ -220,5 +224,4 @@ Escrita **depois** que o sistema estiver pronto, registra *o que de fato foi fei
 
 Itens assumidos neste documento que podem ser ajustados e serão refletidos nos demais arquivos:
 
-1. **Decisões de Tecnologia** são tratadas como parte do conteúdo da seção de engenharia do projeto. O modelo de dados atual não tem um campo exclusivo para elas (apenas `notas_arquitetura` e `desafios_e_solucoes`); portanto, por ora, ficam dentro de `notas_arquitetura`.
-2. **Edição do Perfil** (bio, links, URL do currículo) não aparece explicitamente na lista de funções do painel na ideia inicial. Nesta versão, o `ADMIN` gerencia apenas projetos, tecnologias, certificados e releases.
+1. **Edição do Perfil** (bio, especialidades, links, URL do currículo) não aparece explicitamente na lista de funções do painel na ideia inicial. Nesta versão, o `ADMIN` gerencia apenas projetos, tecnologias, certificados e releases.

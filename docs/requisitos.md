@@ -54,12 +54,12 @@ Este documento é o contrato técnico do projeto: tudo o que o sistema **deve fa
 
 | ID | Requisito | Origem |
 |---|---|---|
-| RF-14 | O sistema deve exibir o mural de certificados com título, instituição emissora, categoria e data de emissão. | UC-07 |
+| RF-14 | O sistema deve exibir o mural de certificados com título, instituição emissora, categoria e data de emissão. A grade do curso não é exibida no mural: fica nos detalhes do certificado (RF-18). | UC-07 |
 | RF-15 | O sistema deve processar o filtro por categoria, exibindo apenas os certificados da categoria escolhida, e permitir limpar o filtro para voltar a ver todos. | UC-08 |
 | RF-16 | O sistema deve informar que não há resultados quando a categoria escolhida não tiver certificados. | UC-08 |
-| RF-17 | O sistema deve disponibilizar, por certificado, o link de verificação oficial da credencial no site do emissor. | UC-09 |
-| RF-18 | O sistema deve exibir a imagem do comprovante ou diploma em um modal, sem sair da página. | UC-09 |
-| RF-19 | O sistema deve exibir, em cada certificado, apenas os meios de validação que estiverem disponíveis. | UC-09 |
+| RF-17 | O sistema deve disponibilizar, por certificado, o link de verificação oficial da credencial no site do emissor, acessível a partir do modal de detalhes. | UC-09 |
+| RF-18 | O sistema deve exibir, ao selecionar um certificado, um modal de detalhes, sem sair da página, com a grade do curso e a imagem do comprovante ou diploma. | UC-09 |
+| RF-19 | O sistema deve exibir, no modal de detalhes de cada certificado, apenas o que estiver disponível: grade do curso, imagem do comprovante e link de verificação. | UC-09 |
 
 ### 2.4 Autenticação e acesso ao Painel de Controle
 
@@ -78,12 +78,12 @@ Este documento é o contrato técnico do projeto: tudo o que o sistema **deve fa
 | ID | Requisito | Origem |
 |---|---|---|
 | RF-27 | O sistema deve permitir ao `ADMIN` listar, criar, editar e excluir **projetos**. | UC-12 |
-| RF-28 | O sistema deve permitir informar, em cada projeto: título, *slug*, resumo, descrição detalhada, notas de arquitetura, desafios e soluções, link do deploy, link do repositório, nome exato do repositório no GitHub, capa e destaque, além de selecionar as tecnologias utilizadas. | UC-12 |
+| RF-28 | O sistema deve permitir informar, em cada projeto: título, *slug*, resumo, descrição detalhada, notas de arquitetura, decisões de tecnologia, desafios e soluções, link do deploy, link do repositório, nome exato do repositório no GitHub, capa e destaque, além de selecionar as tecnologias utilizadas. | UC-12 |
 | RF-29 | O sistema deve vincular cada projeto criado ao perfil e preencher automaticamente as datas de criação e de última alteração. | UC-12 |
 | RF-30 | O sistema deve permitir marcar e desmarcar um projeto como destaque. | UC-12 |
 | RF-31 | O sistema deve pedir confirmação antes de excluir qualquer registro, informando os registros que serão afetados. | UC-12, UC-13, UC-14, UC-15 |
 | RF-32 | O sistema deve permitir ao `ADMIN` listar, criar, editar e excluir **tecnologias**, informando nome, categoria e ícone. | UC-13 |
-| RF-33 | O sistema deve permitir ao `ADMIN` listar, criar, editar e excluir **certificados**, informando título, instituição, categoria, data de emissão, link de validação e imagem do comprovante. | UC-14 |
+| RF-33 | O sistema deve permitir ao `ADMIN` listar, criar, editar e excluir **certificados**, informando título, instituição, categoria (uma das áreas definidas), data de emissão, grade do curso, link de validação e imagem do comprovante. | UC-14 |
 | RF-34 | O sistema deve permitir ao `ADMIN` listar, criar, editar e excluir **releases** no contexto de um projeto, informando versão, changelog e data de lançamento. | UC-15 |
 | RF-35 | O sistema deve validar os campos obrigatórios de todos os formulários do painel e indicar quais precisam ser preenchidos. | UC-12, UC-13, UC-14, UC-15 |
 
@@ -227,5 +227,6 @@ A tabela relaciona cada caso de uso aos requisitos e regras que o sustentam.
 1. **Regras de exclusão (RN-17 a RN-20).** Consolidam os comportamentos implícitos nos casos de uso (por exemplo, a exclusão de um projeto removendo seu histórico de releases). São propostas a validar antes da implementação.
 2. **Metas numéricas.** Os requisitos de desempenho (RNF-18) e de segurança não definem valores como tempo máximo de carregamento ou tempo de expiração da sessão. Esses números serão definidos na implementação.
 3. **Boas práticas acrescentadas.** HTTPS (RNF-07), segredos fora do código (RNF-08) e interface responsiva (RNF-15) não constavam na ideia inicial e foram incluídos como padrão para um portfólio profissional.
-4. **Edição do Perfil.** Seguindo o [`escopo.md`](./escopo.md), não há requisito para o administrador editar o perfil (biografia, links e currículo) pelo painel.
+4. **Edição do Perfil.** Seguindo o [`escopo.md`](./escopo.md), não há requisito para o administrador editar o perfil (biografia, especialidades, links e currículo) pelo painel.
 5. **Entrada do convidado (RF-21).** Mantém a premissa de [`casos-de-uso.md`](./casos-de-uso.md): um botão **Entrar como convidado** que autentica direto a conta `GUEST`.
+6. **Grade do curso.** Foi assumida como opcional: o modal de detalhes a omite quando o certificado não a tem (RF-19). A obrigatoriedade final será definida na implementação (RN-16).

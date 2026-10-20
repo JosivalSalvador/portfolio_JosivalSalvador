@@ -43,7 +43,7 @@ Os códigos `UC-xx` serão usados em [`requisitos.md`](./requisitos.md) para lig
 | UC-06 | Baixar o currículo em PDF | Visitante | Perfil & Currículo | `Perfil` |
 | UC-07 | Consultar o mural de certificados | Visitante | Certificados & Formação | `Certificados` |
 | UC-08 | Filtrar certificados por categoria | Visitante | Certificados & Formação | `Certificados` |
-| UC-09 | Validar um certificado | Visitante | Certificados & Formação | `Certificados` |
+| UC-09 | Consultar detalhes e validar um certificado | Visitante | Certificados & Formação | `Certificados` |
 | UC-10 | Autenticar no painel | Convidado, Administrador | Painel de Controle | `Usuarios` |
 | UC-11 | Inspecionar o painel em modo leitura | Convidado | Painel de Controle | `Usuarios` e todas as entidades (leitura) |
 | UC-12 | Gerenciar projetos | Administrador | Painel de Controle | `Projetos`, `Projeto_Tecnologias`, `Perfil` |
@@ -68,7 +68,7 @@ flowchart LR
         UC06["UC-06 Baixar currículo em PDF"]
         UC07["UC-07 Ver mural de certificados"]
         UC08["UC-08 Filtrar certificados"]
-        UC09["UC-09 Validar certificado"]
+        UC09["UC-09 Ver detalhes e validar certificado"]
     end
 
     subgraph PAINEL["Painel de Controle"]
@@ -226,7 +226,7 @@ O visitante **não precisa de login**. O menu do portfólio mantém sempre visí
 **Fluxo principal**
 
 1. O visitante abre **Certificados & Formação** pelo menu.
-2. O sistema exibe o mural com todos os certificados, cada um com título, instituição emissora, categoria e data de emissão.
+2. O sistema exibe o mural com todos os certificados, cada um com título, instituição emissora, categoria e data de emissão. A grade do curso não aparece no mural: ela é exibida nos detalhes do certificado (UC-09).
 
 **Fluxos alternativos**
 
@@ -253,24 +253,26 @@ O visitante **não precisa de login**. O menu do portfólio mantém sempre visí
 
 ---
 
-### UC-09 Validar um certificado
+### UC-09 Consultar detalhes e validar um certificado
 
 - **Ator:** Visitante / Recrutador
 - **Módulo:** Certificados & Formação
 - **Pré-condição:** o visitante está no mural de certificados (UC-07).
-- **Pós-condição:** o visitante confirma a autenticidade do certificado.
+- **Pós-condição:** o visitante conhece o conteúdo do curso e confirma a autenticidade do certificado.
 
 **Fluxo principal**
 
 1. O visitante seleciona um certificado no mural.
-2. O visitante escolhe uma das formas de validação disponíveis:
-   - **Verificação oficial:** o sistema abre o link da credencial no site da instituição ou plataforma emissora.
-   - **Comprovante:** o sistema abre um **modal** com a imagem da credencial ou do diploma, sem sair da página.
-3. O visitante fecha o modal ou retorna do site externo e continua navegando pelo mural.
+2. O sistema abre um **modal de detalhes**, sem sair da página, com a **grade do curso** (o que foi ensinado) e os meios de validação disponíveis:
+   - **Comprovante:** a imagem da credencial ou do diploma.
+   - **Verificação oficial:** o link da credencial no site da instituição ou plataforma emissora.
+3. O visitante confere a grade e valida a autenticidade vendo o comprovante no próprio modal ou abrindo o link de verificação oficial, que leva ao site do emissor.
+4. O visitante fecha o modal ou retorna do site externo e continua navegando pelo mural.
 
 **Fluxos alternativos**
 
-- **2a.** Se o certificado tiver apenas uma das formas de validação, o sistema exibe somente a que estiver disponível.
+- **2a.** Se o certificado tiver apenas uma das formas de validação, o modal exibe somente a que estiver disponível.
+- **2b.** Se o certificado não tiver grade cadastrada, o modal omite essa parte, sem mensagem de erro.
 
 ---
 
@@ -337,7 +339,7 @@ Em todos os casos desta seção, a **pré-condição** inclui estar autenticado 
 
 1. O administrador abre **Projetos** no painel e o sistema lista os projetos existentes.
 2. O administrador escolhe **Novo projeto**.
-3. O administrador preenche: título, *slug*, resumo, descrição detalhada, notas de arquitetura (incluindo as decisões de tecnologia), desafios e soluções, link do deploy, link do repositório, nome exato do repositório no GitHub, capa e se o projeto é destaque.
+3. O administrador preenche: título, *slug*, resumo, descrição detalhada, notas de arquitetura, decisões de tecnologia, desafios e soluções, link do deploy, link do repositório, nome exato do repositório no GitHub, capa e se o projeto é destaque.
 4. O administrador seleciona as tecnologias utilizadas (no mínimo 1).
 5. O administrador salva. O sistema valida os dados, registra o projeto vinculado ao perfil e preenche as datas de criação e de última alteração.
 6. O sistema confirma o cadastro e o projeto passa a aparecer na vitrine (UC-01).
@@ -404,7 +406,7 @@ Em todos os casos desta seção, a **pré-condição** inclui estar autenticado 
 
 1. O administrador abre **Certificados** no painel e o sistema lista os certificados cadastrados.
 2. O administrador escolhe **Novo certificado**.
-3. O administrador informa título, instituição emissora, categoria, data de emissão, link de validação oficial e/ou imagem do comprovante.
+3. O administrador informa título, instituição emissora, categoria (*Frontend*, *Backend*, *Banco de Dados*, *DevOps/Cloud*, *Arquitetura* ou *Outros*), data de emissão, grade do curso, link de validação oficial e/ou imagem do comprovante.
 4. O administrador salva. O sistema valida os dados e registra o certificado vinculado ao perfil.
 5. O certificado passa a aparecer no mural (UC-07) e nos filtros por categoria (UC-08).
 
@@ -486,7 +488,7 @@ Em todos os casos desta seção, a **pré-condição** inclui estar autenticado 
 
 Exemplos de como os casos de uso se combinam no dia a dia.
 
-**Cenário 1: recrutador com pouco tempo.** Ao receber o link do portfólio, o recrutador clica em **Baixar currículo** e já tem o PDF (UC-06). Em seguida abre **Certificados**, filtra por *Backend* (UC-08) e abre o modal do diploma de um curso para conferir a autenticidade (UC-09).
+**Cenário 1: recrutador com pouco tempo.** Ao receber o link do portfólio, o recrutador clica em **Baixar currículo** e já tem o PDF (UC-06). Em seguida abre **Certificados**, filtra por *Backend* (UC-08) e abre os detalhes de um curso, onde confere a grade e o diploma para validar a autenticidade (UC-09).
 
 **Cenário 2: desenvolvedor avaliando a maturidade técnica.** Na vitrine, abre um projeto em destaque (UC-01, UC-02), lê a arquitetura, os desafios e as decisões de tecnologia (UC-03) e confere no histórico de releases como o projeto evoluiu (UC-04).
 
@@ -499,6 +501,6 @@ Exemplos de como os casos de uso se combinam no dia a dia.
 ## 9. Premissas e Pontos em Aberto
 
 1. **Entrada do convidado.** Foi assumida uma opção **Entrar como convidado** na tela de login, que autentica direto a conta `GUEST`. A alternativa seria divulgar as credenciais dessa conta para quem quiser testar o painel.
-2. **Edição do Perfil.** Seguindo o [`escopo.md`](./escopo.md), não há caso de uso para o administrador editar o perfil (biografia, links e currículo) pelo painel.
+2. **Edição do Perfil.** Seguindo o [`escopo.md`](./escopo.md), não há caso de uso para o administrador editar o perfil (biografia, especialidades, links e currículo) pelo painel.
 3. **Detalhes formais.** O que acontece com registros dependentes na exclusão, a validação das requisições do GitHub e as demais restrições técnicas serão definidos como requisitos e regras de negócio em [`requisitos.md`](./requisitos.md).
 4. **Estados vazios.** Foi assumido que listas e seções sem conteúdo são exibidas em estado vazio, sem mensagem de erro para o visitante.
