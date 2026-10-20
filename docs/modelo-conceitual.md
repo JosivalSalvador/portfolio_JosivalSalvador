@@ -67,7 +67,8 @@ Armazena a inteligência de engenharia, a arquitetura e os detalhes de cada apli
 | `slug` | Texto | Identificador amigável na URL (ex.: `gerenciador-de-projetos-web`). Não se repete entre projetos. |
 | `resumo` | Texto | Descrição curta para os cards da vitrine. |
 | `descricao_detalhada` | Texto longo | Visão geral e proposta da aplicação. |
-| `notas_arquitetura` | Texto longo | Engenharia por trás: arquitetura de pastas, fluxo de dados, padrões de projeto e decisões de tecnologia. |
+| `notas_arquitetura` | Texto longo | Engenharia por trás: arquitetura de pastas, fluxo de dados e padrões de projeto. |
+| `decisoes_tecnologicas` | Texto longo | Por que cada tecnologia do projeto foi escolhida em vez de outra. |
 | `desafios_e_solucoes` | Texto longo | Maior desafio técnico enfrentado e a estratégia usada para resolvê-lo. |
 | `url_deploy` | URL | Link da aplicação rodando ao vivo. |
 | `url_repositorio` | URL | Link do código-fonte no GitHub. |
@@ -123,12 +124,13 @@ Mural de conquistas acadêmicas, cursos e certificações profissionais.
 | `id` | Identificador | Identificador único do certificado. |
 | `titulo` | Texto | Nome do curso ou certificação. |
 | `instituicao` | Texto | Instituição emissora. |
-| `categoria` | Lista de valores | Área temática usada nos filtros (ex.: *Backend*, *DevOps*, *Arquitetura*). |
+| `categoria` | Lista de valores | Área temática usada nos filtros: *Frontend*, *Backend*, *Banco de Dados*, *DevOps/Cloud*, *Arquitetura* ou *Outros*. |
 | `data_emissao` | Data | Data de conclusão. |
+| `grade_curso` | Texto longo | Grade do curso: o que foi ensinado. Exibida no modal de detalhes do certificado, junto com o comprovante e o link de verificação, quando houver. |
 | `url_credencial` | URL | Link externo oficial para validação. |
 | `url_comprovante_imagem` | URL | Imagem da credencial ou diploma, exibida em modal. Ao menos um entre este campo e `url_credencial` deve ser informado. |
 
-As categorias de `Certificados` (áreas de estudo, como *Arquitetura*) são um conjunto **distinto** das categorias de `Tecnologias` (classificação de ferramentas).
+As categorias de `Certificados` (áreas de estudo, como *Arquitetura*) são um conjunto **distinto** das categorias de `Tecnologias` (classificação de ferramentas). O conjunto é fixo: não há tela no painel para gerenciar essas categorias.
 
 ---
 
@@ -142,6 +144,7 @@ Alimenta o resumo profissional, o currículo e os canais de contato.
 | `nome_completo` | Texto | Nome do profissional. |
 | `cargo_titulo` | Texto | Título principal (ex.: *Desenvolvedor Full Stack Web*). |
 | `biografia` | Texto longo | Resumo da trajetória e do foco profissional. |
+| `especialidades` | Texto | Principais especialidades do profissional, exibidas no resumo profissional. |
 | `email_contato` | E-mail | E-mail profissional. |
 | `url_linkedin` | URL | Perfil no LinkedIn. |
 | `url_github` | URL | Perfil no GitHub. |
@@ -238,6 +241,7 @@ erDiagram
         texto nome_completo
         texto cargo_titulo
         texto_longo biografia
+        texto especialidades
         email email_contato
         url url_linkedin
         url url_github
@@ -257,6 +261,7 @@ erDiagram
         texto resumo
         texto_longo descricao_detalhada
         texto_longo notas_arquitetura
+        texto_longo decisoes_tecnologicas
         texto_longo desafios_e_solucoes
         url url_deploy
         url url_repositorio
@@ -285,6 +290,7 @@ erDiagram
         texto instituicao
         lista categoria
         data data_emissao
+        texto_longo grade_curso
         url url_credencial
         url url_comprovante_imagem
     }
@@ -296,4 +302,3 @@ erDiagram
 
 1. **Nível conceitual.** Este documento não define chaves estrangeiras, tipos físicos, tamanhos de campo nem comportamento de exclusão. Esses detalhes, as restrições de integridade referencial e as **regras de negócio** formais ficam em [`requisitos.md`](./requisitos.md) e na implementação.
 2. **`Projeto_Tecnologias`.** Aparece como elemento próprio na visão geral por fazer parte da modelagem original, mas conceitualmente é o relacionamento N:N `utiliza` entre `Projetos` e `Tecnologias`.
-3. **Decisões de tecnologia** continuam dentro de `notas_arquitetura` (premissa herdada de [`escopo.md`](./escopo.md)). Se for preferível um campo próprio, basta adicionar um atributo `decisoes_tecnologicas` em `Projetos`.
