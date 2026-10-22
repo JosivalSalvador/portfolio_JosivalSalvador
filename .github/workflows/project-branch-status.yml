@@ -1,0 +1,147 @@
+# Move o card da issue no Project conforme o que acontece na branch.
+#   branch sem commits além da dev  -> Ready
+#   branch com commits além da dev  -> In Progress
+# A issue é descoberta pelo número no nome da branch (feat/3-login, 3-login).
+name: Project - Status por branch
+
+on:
+  push:
+    branches-ignore:
+      - dev
+      - main
+
+permissions:
+  contents: read
+
+env:
+  PROJECT_OWNER: JosivalSalvador
+  PROJECT_NUMBER: 6
+
+jobs:
+  update-status:
+    # push que apaga branch não deve rodar nada
+    if: github.event.deleted == false
+    runs-on: ubuntu-latest
+    steps:
+      - name: Descobrir issue e status de destino
+        id: decide
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          BRANCH="$GITHUB_REF_NAME"
+
+          # Número da issue: número no começo de um trecho do nome da branch
+          if [[ "$BRANCH" =~ (^|/)([0-9]+)(-|/|$) ]]; then
+            ISSUE="${BASH_REMATCH[2]}"
+          else
+            echo "Branch '$BRANCH' não tem número de issue. Nada a fazer."
+            exit 0
+          fi
+
+          # Quantos commits a branch tem que a dev não tem
+          AHEAD=$(gh api "repos/$GITHUB_REPOSITORY/compare/dev...$GITHUB_SHA" --jq '.ahead_by')
+
+          if [ "$AHEAD" -gt 0 ]; then
+            TARGET="In Progress"
+          else
+            TARGET="Ready"
+          fi
+
+          echo "Issue #$ISSUE | commits à frente da dev: $AHEAD | destino: $TARGET"
+          echo "issue=$ISSUE" >> "$GITHUB_OUTPUT"
+          echo "target=$TARGET" >> "$GITHUB_OUTPUT"
+
+      - name: Mover o card no Project
+        if: steps.decide.outputs.issue != ''
+        env:
+          GH_TOKEN: ${{ secrets.PROJECT_TOKEN }}
+          ISSUE: ${{ steps.decide.outputs.issue }}
+          TARGET: ${{ steps.decide.outputs.target }}
+        run: |
+          OWNER="${GITHUB_REPOSITORY%%/*}"
+          REPO="${GITHUB_REPOSITORY##*/}"
+
+          # 1) Project, campo Status e as colunas (opções)
+          PROJECT_JSON=$(gh api graphql -f login="$PROJECT_OWNER" -F number="$PROJECT_NUMBER" -f query='
+            query($login: String!, $number: Int!) {
+              user(login: $login) {
+                projectV2(number: $number) {
+                  id
+                  field(name: "Status") {
+                    ... on ProjectV2SingleSelectField { id options { id name } }
+                  }
+                }
+              }
+            }')
+
+          PROJECT_ID=$(jq -r '.data.user.projectV2.id // empty' <<< "$PROJECT_JSON")
+          FIELD_ID=$(jq -r '.data.user.projectV2.field.id // empty' <<< "$PROJECT_JSON")
+
+          if [ -z "$PROJECT_ID" ] || [ -z "$FIELD_ID" ]; then
+            echo "::error::Project ou campo Status não encontrado. Confira PROJECT_OWNER, PROJECT_NUMBER e o PROJECT_TOKEN."
+            exit 1
+          fi
+
+          OPTION_ID=$(jq -r --arg t "$TARGET" '.data.user.projectV2.field.options[] | select(.name == $t) | .id' <<< "$PROJECT_JSON")
+
+          if [ -z "$OPTION_ID" ]; then
+            echo "::error::A coluna '$TARGET' não existe no campo Status do Project."
+            exit 1
+          fi
+
+          # 2) Card da issue dentro deste Project e o status atual dele
+          if ! ITEM_JSON=$(gh api graphql -f owner="$OWNER" -f repo="$REPO" -F issue="$ISSUE" -f query='
+            query($owner: String!, $repo: String!, $issue: Int!) {
+              repository(owner: $owner, name: $repo) {
+                issue(number: $issue) {
+                  projectItems(first: 20) {
+                    nodes {
+                      id
+                      project { id }
+                      fieldValueByName(name: "Status") {
+                        ... on ProjectV2ItemFieldSingleSelectValue { name }
+                      }
+                    }
+                  }
+                }
+              }
+            }'); then
+            echo "::warning::Não achei a issue #$ISSUE. Nada foi alterado."
+            exit 0
+          fi
+
+          ITEM_ID=$(jq -r --arg p "$PROJECT_ID" '[(.data.repository.issue.projectItems.nodes // [])[] | select(.project.id == $p)][0].id // empty' <<< "$ITEM_JSON")
+          CURRENT=$(jq -r --arg p "$PROJECT_ID" '[(.data.repository.issue.projectItems.nodes // [])[] | select(.project.id == $p)][0].fieldValueByName.name // empty' <<< "$ITEM_JSON")
+
+          if [ -z "$ITEM_ID" ]; then
+            echo "::warning::A issue #$ISSUE não está no Project. Nada foi alterado."
+            exit 0
+          fi
+
+          # 3) Só move para frente, nunca para trás
+          rank() {
+            case "$1" in
+              "Backlog") echo 0 ;;
+              "Ready") echo 1 ;;
+              "In Progress") echo 2 ;;
+              "In Review") echo 3 ;;
+              "Done") echo 4 ;;
+              *) echo -1 ;;
+            esac
+          }
+
+          if [ "$(rank "$CURRENT")" -ge "$(rank "$TARGET")" ]; then
+            echo "Card da issue #$ISSUE já está em '$CURRENT'. Não mexo."
+            exit 0
+          fi
+
+          # 4) Atualiza o Status
+          gh api graphql -f project="$PROJECT_ID" -f item="$ITEM_ID" -f field="$FIELD_ID" -f option="$OPTION_ID" -f query='
+            mutation($project: ID!, $item: ID!, $field: ID!, $option: String!) {
+              updateProjectV2ItemFieldValue(input: {
+                projectId: $project, itemId: $item, fieldId: $field,
+                value: { singleSelectOptionId: $option }
+              }) { projectV2Item { id } }
+            }' > /dev/null
+
+          echo "Issue #$ISSUE: '${CURRENT:-sem status}' -> '$TARGET'"
