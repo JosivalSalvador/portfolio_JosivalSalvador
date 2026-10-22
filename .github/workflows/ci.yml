@@ -93,21 +93,22 @@ jobs:
             exit 1
           fi
 
-          OPTION_ID=$(jq -r --arg t "$TARGET" '.data.user.projectV2.field.options[] | select(.name == $t) | .id' <<< "$PROJECT_JSON")
+          # Compara o nome da coluna sem diferenciar maiúsculas de minúsculas
+          OPTION_ID=$(jq -r --arg t "$TARGET" '[.data.user.projectV2.field.options[] | select((.name | ascii_downcase) == ($t | ascii_downcase)) | .id][0] // empty' <<< "$PROJECT_JSON")
 
           if [ -z "$OPTION_ID" ]; then
             echo "::error::A coluna '$TARGET' não existe no campo Status do Project."
             exit 1
           fi
 
-          # Só move para frente, nunca para trás
+          # Só move para frente, nunca para trás (sem diferenciar maiúsculas)
           rank() {
-            case "$1" in
-              "Backlog") echo 0 ;;
-              "Ready") echo 1 ;;
-              "In Progress") echo 2 ;;
-              "In Review") echo 3 ;;
-              "Done") echo 4 ;;
+            case "${1,,}" in
+              "backlog") echo 0 ;;
+              "ready") echo 1 ;;
+              "in progress") echo 2 ;;
+              "in review") echo 3 ;;
+              "done") echo 4 ;;
               *) echo -1 ;;
             esac
           }
