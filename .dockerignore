@@ -1,0 +1,132 @@
+############################################################
+# .dockerignore da raiz (monorepo: web + api)
+# O contexto de build é a raiz, então os padrões usam **/ pra
+# valer também dentro de apps/web e apps/api.
+############################################################
+
+# Dependências (instaladas dentro do Docker, nunca copiadas)
+**/node_modules
+**/.pnpm-store
+**/npm-debug.log*
+**/yarn-debug.log*
+**/yarn-error.log*
+**/pnpm-debug.log*
+**/lerna-debug.log*
+
+# Saídas de build (geradas durante o build)
+**/.next
+**/out
+**/dist
+**/build
+**/.vercel
+
+# Testes e saídas de teste
+**/coverage
+**/.nyc_output
+**/__tests__
+**/__mocks__
+**/jest
+**/cypress
+**/playwright-report
+**/test-results
+**/.vitest
+**/vitest.config.*
+**/jest.config.*
+**/cypress.config.*
+**/playwright.config.*
+**/*.test.*
+**/*.spec.*
+
+# Desenvolvimento local e editores
+**/.git
+**/.gitattributes
+**/.vscode
+**/.idea
+**/*.swp
+**/*.swo
+**/*~
+**/*.log
+
+# Variáveis de ambiente: segredos fora do contexto de build.
+# O .env.production fica de fora da lista de propósito (config de
+# build SEM segredo). Segredos reais entram em runtime, nunca nele.
+**/.env
+**/.env*.local
+**/.env.development
+**/.env.test
+**/.env.production.local
+
+# Arquivos do Docker
+**/Dockerfile*
+**/.dockerignore
+**/compose.yaml
+**/compose.yml
+**/docker-compose*.yaml
+**/docker-compose*.yml
+
+# Documentação
+**/*.md
+docs
+
+# CI/CD
+.github
+.gitlab-ci.yml
+.travis.yml
+.circleci
+Jenkinsfile
+
+# Caches e temporários
+**/.cache
+**/.parcel-cache
+**/.eslintcache
+**/.stylelintcache
+**/.swc
+**/.turbo
+**/.tmp
+**/.temp
+
+# Metadados do TypeScript
+**/*.tsbuildinfo
+
+# Configurações sensíveis ou desnecessárias
+**/*.pem
+**/.editorconfig
+**/.prettierrc*
+**/prettier.config.*
+**/.eslintrc*
+**/eslint.config.*
+**/.stylelintrc*
+**/stylelint.config.*
+**/.babelrc*
+**/*.iml
+**/*.ipr
+**/*.iws
+
+# Lixo de sistema operacional
+**/.DS_Store
+**/._*
+**/.Spotlight-V100
+**/.Trashes
+**/ehthumbs.db
+**/Thumbs.db
+**/Desktop.ini
+
+# Metadados e configs de ferramentas de IA
+**/.cursor
+**/.cursorrules
+**/.copilot
+**/.copilotignore
+**/.gemini
+**/.anthropic
+**/.kiro
+**/.claude
+**/.agents
+
+# Temporários gerados por IA
+**/*.aider*
+**/*.copilot*
+**/*.chatgpt*
+**/*.claude*
+**/*.gemini*
+**/*.openai*
+**/*.anthropic*
