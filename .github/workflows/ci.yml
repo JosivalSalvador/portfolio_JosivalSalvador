@@ -1,0 +1,221 @@
+# CI da branch dev.
+#   issues    : descobre quais issues entraram na dev (merges que ainda não foram para a main)
+#   in-review : move os cards dessas issues para In Review
+#   checks    : lint, check-types, test e build via turbo
+#   open-pr   : se os checks passarem, abre (ou atualiza) o PR dev -> main com "Closes #N"
+name: CI
+
+on:
+  push:
+    branches:
+      - dev
+
+# Se chegar outro push na dev, cancela a execução anterior.
+# Sem risco: cada execução recalcula tudo a partir do estado atual da dev.
+concurrency:
+  group: ci-dev
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  PROJECT_OWNER: JosivalSalvador
+  PROJECT_NUMBER: 6
+
+jobs:
+  issues:
+    runs-on: ubuntu-latest
+    outputs:
+      numbers: ${{ steps.find.outputs.numbers }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Achar issues pelos merges da dev que ainda não estão na main
+        id: find
+        run: |
+          PR_RE='^Merge pull request #[0-9]+ from [^/]+/(.+)$'
+          LOCAL_RE="^Merge branch '([^']+)'"
+          ISSUE_RE='(^|/)([0-9]+)(-|/|$)'
+          NUMS=()
+
+          while IFS= read -r SUBJECT; do
+            BRANCH=""
+            if [[ "$SUBJECT" =~ $PR_RE ]]; then
+              BRANCH="${BASH_REMATCH[1]}"
+            elif [[ "$SUBJECT" =~ $LOCAL_RE ]]; then
+              BRANCH="${BASH_REMATCH[1]}"
+            fi
+
+            if [ -n "$BRANCH" ] && [[ "$BRANCH" =~ $ISSUE_RE ]]; then
+              NUMS+=("${BASH_REMATCH[2]}")
+            fi
+          done < <(git log --first-parent --merges --format=%s origin/main..HEAD)
+
+          NUMBERS=$(printf '%s\n' "${NUMS[@]}" | sort -nu | xargs)
+          echo "Issues encontradas: ${NUMBERS:-nenhuma}"
+          echo "numbers=$NUMBERS" >> "$GITHUB_OUTPUT"
+
+  in-review:
+    needs: issues
+    if: needs.issues.outputs.numbers != ''
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.PROJECT_TOKEN }}
+      ISSUES: ${{ needs.issues.outputs.numbers }}
+      TARGET: In Review
+    steps:
+      - name: Mover cards para In Review
+        run: |
+          OWNER="${GITHUB_REPOSITORY%%/*}"
+          REPO="${GITHUB_REPOSITORY##*/}"
+
+          # Project, campo Status e a coluna de destino
+          PROJECT_JSON=$(gh api graphql -f login="$PROJECT_OWNER" -F number="$PROJECT_NUMBER" -f query='
+            query($login: String!, $number: Int!) {
+              user(login: $login) {
+                projectV2(number: $number) {
+                  id
+                  field(name: "Status") {
+                    ... on ProjectV2SingleSelectField { id options { id name } }
+                  }
+                }
+              }
+            }')
+
+          PROJECT_ID=$(jq -r '.data.user.projectV2.id // empty' <<< "$PROJECT_JSON")
+          FIELD_ID=$(jq -r '.data.user.projectV2.field.id // empty' <<< "$PROJECT_JSON")
+
+          if [ -z "$PROJECT_ID" ] || [ -z "$FIELD_ID" ]; then
+            echo "::error::Project ou campo Status não encontrado. Confira PROJECT_OWNER, PROJECT_NUMBER e o PROJECT_TOKEN."
+            exit 1
+          fi
+
+          # Compara o nome da coluna sem diferenciar maiúsculas de minúsculas
+          OPTION_ID=$(jq -r --arg t "$TARGET" '[.data.user.projectV2.field.options[] | select((.name | ascii_downcase) == ($t | ascii_downcase)) | .id][0] // empty' <<< "$PROJECT_JSON")
+
+          if [ -z "$OPTION_ID" ]; then
+            echo "::error::A coluna '$TARGET' não existe no campo Status do Project."
+            exit 1
+          fi
+
+          # Só move para frente, nunca para trás (sem diferenciar maiúsculas)
+          rank() {
+            case "${1,,}" in
+              "backlog") echo 0 ;;
+              "ready") echo 1 ;;
+              "in progress") echo 2 ;;
+              "in review") echo 3 ;;
+              "done") echo 4 ;;
+              *) echo -1 ;;
+            esac
+          }
+
+          move_card() {
+            local ISSUE="$1"
+            local ITEM_JSON ITEM_ID CURRENT
+
+            if ! ITEM_JSON=$(gh api graphql -f owner="$OWNER" -f repo="$REPO" -F issue="$ISSUE" -f query='
+              query($owner: String!, $repo: String!, $issue: Int!) {
+                repository(owner: $owner, name: $repo) {
+                  issue(number: $issue) {
+                    projectItems(first: 20) {
+                      nodes {
+                        id
+                        project { id }
+                        fieldValueByName(name: "Status") {
+                          ... on ProjectV2ItemFieldSingleSelectValue { name }
+                        }
+                      }
+                    }
+                  }
+                }
+              }'); then
+              echo "::warning::Não achei a issue #$ISSUE. Nada foi alterado."
+              return 0
+            fi
+
+            ITEM_ID=$(jq -r --arg p "$PROJECT_ID" '[(.data.repository.issue.projectItems.nodes // [])[] | select(.project.id == $p)][0].id // empty' <<< "$ITEM_JSON")
+            CURRENT=$(jq -r --arg p "$PROJECT_ID" '[(.data.repository.issue.projectItems.nodes // [])[] | select(.project.id == $p)][0].fieldValueByName.name // empty' <<< "$ITEM_JSON")
+
+            if [ -z "$ITEM_ID" ]; then
+              echo "::warning::A issue #$ISSUE não está no Project. Nada foi alterado."
+              return 0
+            fi
+
+            if [ "$(rank "$CURRENT")" -ge "$(rank "$TARGET")" ]; then
+              echo "Issue #$ISSUE já está em '$CURRENT'. Não mexo."
+              return 0
+            fi
+
+            gh api graphql -f project="$PROJECT_ID" -f item="$ITEM_ID" -f field="$FIELD_ID" -f option="$OPTION_ID" -f query='
+              mutation($project: ID!, $item: ID!, $field: ID!, $option: String!) {
+                updateProjectV2ItemFieldValue(input: {
+                  projectId: $project, itemId: $item, fieldId: $field,
+                  value: { singleSelectOptionId: $option }
+                }) { projectV2Item { id } }
+              }' > /dev/null
+
+            echo "Issue #$ISSUE: '${CURRENT:-sem status}' -> '$TARGET'"
+          }
+
+          for ISSUE in $ISSUES; do
+            move_card "$ISSUE"
+          done
+
+  checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+
+      # Sem "version": usa o packageManager do package.json (pnpm@11.25.0)
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Instalar dependências
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint, tipos, testes e build
+        run: pnpm exec turbo run lint check-types test build --ui=stream
+
+  open-pr:
+    needs: [checks, issues]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      ISSUES: ${{ needs.issues.outputs.numbers }}
+    steps:
+      - name: Abrir ou atualizar o PR dev -> main
+        run: |
+          AHEAD=$(gh api "repos/$GITHUB_REPOSITORY/compare/main...dev" --jq '.ahead_by')
+          if [ "$AHEAD" -eq 0 ]; then
+            echo "A dev não tem nada novo em relação à main. Não abro PR."
+            exit 0
+          fi
+
+          {
+            echo "Aberto pelo CI depois que os testes passaram na \`dev\`."
+            echo
+            for N in $ISSUES; do
+              echo "Closes #$N"
+            done
+          } > body.md
+
+          PR=$(gh pr list --repo "$GITHUB_REPOSITORY" --head dev --base main --state open --json number --jq '.[0].number // empty')
+
+          if [ -n "$PR" ]; then
+            gh pr edit "$PR" --repo "$GITHUB_REPOSITORY" --body-file body.md
+            echo "PR #$PR atualizado."
+          else
+            gh pr create --repo "$GITHUB_REPOSITORY" --head dev --base main --title "dev -> main" --body-file body.md
+          fi
