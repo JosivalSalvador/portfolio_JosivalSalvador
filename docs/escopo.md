@@ -1,8 +1,8 @@
 # Escopo do Projeto - Portfólio & Sistema de Gerenciamento
 
-> Documento da **Fase 1 (planejamento)**. A documentação completa do projeto tem 8 arquivos, descritos na [seção 8](#8-documentação-do-projeto).
+> Documento da **Fase 1 (planejamento)**. A documentação completa do projeto tem 9 arquivos, descritos na [seção 8](#8-documentação-do-projeto).
 >
-> **Fase 1 - Planejamento:** [`modelo-conceitual.md`](./modelo-conceitual.md) · [`casos-de-uso.md`](./casos-de-uso.md) · [`requisitos.md`](./requisitos.md)
+> **Fase 1 - Planejamento:** [`modelo-conceitual.md`](./modelo-conceitual.md) · [`casos-de-uso.md`](./casos-de-uso.md) · [`requisitos.md`](./requisitos.md) · [`plano-de-trabalho.md`](./plano-de-trabalho.md)
 > **Fase 2 - Pós-implementação:** [`arquitetura.md`](./arquitetura.md) · [`api.md`](./api.md) · [`infraestrutura-e-deploy.md`](./infraestrutura-e-deploy.md) · [`README.md`](../README.md)
 
 ---
@@ -32,7 +32,7 @@ Um portfólio profissional com **painel administrativo próprio**, construído p
 O projeto entrega duas coisas:
 
 1. **O sistema** - portfólio público + painel administrativo (módulos descritos na seção 2).
-2. **A documentação** - 8 arquivos que cobrem desde o planejamento até a operação do sistema (seção 8).
+2. **A documentação** - 9 arquivos que cobrem desde o planejamento até a operação do sistema (seção 8).
 
 ---
 
@@ -88,7 +88,7 @@ A página é organizada em três seções.
   - `v1.0.0` - refatoração de queries no banco
 - Cada release mostra: **versão**, **changelog** (o que mudou, correções e novas funcionalidades) e **data de lançamento**.
 - As releases são geradas a partir das **tags de release do GitHub** (versionamento iniciando em `v0.1.0`) e podem entrar no sistema de duas formas:
-  1. automaticamente, via **Webhook / GitHub Action**;
+  1. automaticamente, via **Webhook do GitHub**;
   2. manualmente, via **formulário interno** do Painel de Controle.
 - O identificador original da release no GitHub é armazenado para **evitar duplicidade** entre as duas formas de entrada.
 - Um projeto recém-cadastrado, sem nenhuma release sincronizada, exibe a aba de histórico em estado vazio (sem erro).
@@ -114,6 +114,7 @@ Links diretos e sempre visíveis para:
 
 - **Botão de download** do currículo em **PDF**, sempre apontando para a versão mais atualizada.
 - Acessível em 1 clique, a partir de qualquer tela do portfólio.
+- O `ADMIN` atualiza o arquivo pelo painel (ver 6.2).
 
 ### 4.4 Habilidades agrupadas
 
@@ -170,11 +171,13 @@ Cada certificado oferece pelo menos um meio de comprovação: o link de verifica
 - Gerenciar **tecnologias** e associá-las aos projetos.
 - Cadastrar, editar e excluir **certificados** (incluindo a grade do curso).
 - Registrar e atualizar o **histórico de releases** (formulário interno, complementando a sincronização automática com o GitHub).
+- Editar o **perfil** (nome, cargo, biografia, especialidades, e-mail e links de contato) e enviar o **currículo em PDF**. O perfil já existe desde a configuração inicial: o painel apenas o edita.
+- Enviar **arquivos** pelo painel (capa dos projetos, ícones das tecnologias, imagens de comprovante dos certificados e o currículo). Os arquivos ficam em armazenamento externo, e o banco guarda apenas o link.
 
 ### 6.3 Modo Convidado / Leitura (`GUEST`)
 
 - Permite que qualquer pessoa **veja o painel por dentro** e conheça a interface administrativa, **sem risco para os dados** do autor.
-- O convidado navega por todas as telas do painel, mas **não consegue criar, alterar nem apagar** nenhum registro.
+- O convidado navega por todas as telas do painel, inclusive a do perfil, mas **não consegue criar, alterar, enviar arquivos nem apagar** nenhum registro.
 - A restrição é garantida **no servidor** (e não apenas escondendo botões na interface), de modo que nenhuma ação de escrita seja aceita para esse papel.
 
 ---
@@ -201,6 +204,7 @@ Escrita **antes** de codar, define *o que* será construído.
 | [`modelo-conceitual.md`](./modelo-conceitual.md) | As 7 entidades, atributos, tipos de dados e cardinalidades `(min, max)` dos relacionamentos. |
 | [`casos-de-uso.md`](./casos-de-uso.md) | Fluxos e cenários de uso de Visitante/Recrutador, `GUEST` e `ADMIN`. |
 | [`requisitos.md`](./requisitos.md) | Requisitos Funcionais, Requisitos Não-Funcionais e Regras de Negócio. |
+| [`plano-de-trabalho.md`](./plano-de-trabalho.md) | Fluxo de trabalho, quadro e convenções no GitHub, e a ordem e a divisão por semana das issues. |
 
 ### 8.2 Fase 2 - Pós-implementação (descreve o sistema construído)
 
@@ -210,7 +214,7 @@ Escrita **depois** que o sistema estiver pronto, registra *o que de fato foi fei
 |---|---|
 | [`arquitetura.md`](./arquitetura.md) | Arquitetura real do sistema: camadas, comunicação entre front-end, back-end e banco de dados, estrutura de pastas e padrões adotados. |
 | [`api.md`](./api.md) | Contrato da API: endpoints, autenticação, rotas protegidas por papel (`ADMIN`/`GUEST`), formatos de requisição e resposta, códigos de erro e o endpoint que recebe o Webhook de releases do GitHub. |
-| [`infraestrutura-e-deploy.md`](./infraestrutura-e-deploy.md) | Ambientes, variáveis de configuração, banco de dados, pipeline de build e publicação (incluindo a GitHub Action de sincronização de releases) e o passo a passo de deploy. |
+| [`infraestrutura-e-deploy.md`](./infraestrutura-e-deploy.md) | Ambientes, variáveis de configuração, banco de dados, pipeline de build e publicação (incluindo a configuração do Webhook de sincronização de releases) e o passo a passo de deploy. |
 | [`README.md`](../README.md) | Porta de entrada do repositório: o que é o projeto, tecnologias, como rodar localmente e links para toda a documentação. |
 
 ### 8.3 Regra de manutenção
@@ -224,4 +228,4 @@ Escrita **depois** que o sistema estiver pronto, registra *o que de fato foi fei
 
 Itens assumidos neste documento que podem ser ajustados e serão refletidos nos demais arquivos:
 
-1. **Edição do Perfil** (bio, especialidades, links, URL do currículo) não aparece explicitamente na lista de funções do painel na ideia inicial. Nesta versão, o `ADMIN` gerencia apenas projetos, tecnologias, certificados e releases.
+1. **Armazenamento de arquivos.** O serviço de armazenamento externo e os limites de upload (tipos permitidos e tamanho máximo) serão definidos na implementação.

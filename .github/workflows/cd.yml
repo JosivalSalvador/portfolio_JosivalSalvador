@@ -1,0 +1,136 @@
+# CD da branch main.
+#   target-date : quando o PR dev -> main é mergeado, grava a Target date (data de hoje)
+#                 no card de cada issue que o PR fecha ("Closes #N"), se ela estiver vazia.
+# O Status Done é movido pela automação nativa do Project; aqui entra só a data.
+# Build e publicação das imagens entram neste arquivo depois, em jobs próprios,
+# sem "needs" para o job abaixo, para uma falha não travar a outra.
+name: CD
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+env:
+  PROJECT_OWNER: JosivalSalvador
+  PROJECT_NUMBER: 6
+
+jobs:
+  target-date:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    steps:
+      - name: Achar as issues fechadas pelo PR deste push
+        id: find
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # O vínculo commit -> PR pode demorar alguns segundos para aparecer
+          PR=""
+          for TRY in 1 2 3; do
+            PR=$(gh api "repos/$GITHUB_REPOSITORY/commits/$GITHUB_SHA/pulls" --jq '[.[] | select(.base.ref == "main" and .merged_at != null)][0].number // empty')
+            [ -n "$PR" ] && break
+            sleep 5
+          done
+
+          if [ -z "$PR" ]; then
+            echo "Nenhum PR mergeado associado a $GITHUB_SHA. Nada a fazer."
+            exit 0
+          fi
+
+          NUMBERS=$(gh pr view "$PR" --repo "$GITHUB_REPOSITORY" --json closingIssuesReferences --jq '[.closingIssuesReferences[].number] | sort | join(" ")')
+          echo "PR #$PR | issues: ${NUMBERS:-nenhuma}"
+          echo "numbers=$NUMBERS" >> "$GITHUB_OUTPUT"
+
+      - name: Gravar a Target date nos cards
+        if: steps.find.outputs.numbers != ''
+        env:
+          GH_TOKEN: ${{ secrets.PROJECT_TOKEN }}
+          ISSUES: ${{ steps.find.outputs.numbers }}
+        run: |
+          OWNER="${GITHUB_REPOSITORY%%/*}"
+          REPO="${GITHUB_REPOSITORY##*/}"
+          TODAY=$(TZ=America/Manaus date +%F)
+
+          # Project e campo Target date
+          PROJECT_JSON=$(gh api graphql -f login="$PROJECT_OWNER" -F number="$PROJECT_NUMBER" -f query='
+            query($login: String!, $number: Int!) {
+              user(login: $login) {
+                projectV2(number: $number) {
+                  id
+                  targetField: field(name: "Target date") {
+                    ... on ProjectV2Field { id }
+                  }
+                }
+              }
+            }')
+
+          PROJECT_ID=$(jq -r '.data.user.projectV2.id // empty' <<< "$PROJECT_JSON")
+          FIELD_ID=$(jq -r '.data.user.projectV2.targetField.id // empty' <<< "$PROJECT_JSON")
+
+          if [ -z "$PROJECT_ID" ]; then
+            echo "::error::Project não encontrado. Confira PROJECT_OWNER, PROJECT_NUMBER e o PROJECT_TOKEN."
+            exit 1
+          fi
+
+          if [ -z "$FIELD_ID" ]; then
+            echo "::warning::O campo 'Target date' não existe no Project. A data não foi gravada."
+            exit 0
+          fi
+
+          set_date() {
+            local ISSUE="$1"
+            local ITEM_JSON ITEM_ID CURRENT
+
+            if ! ITEM_JSON=$(gh api graphql -f owner="$OWNER" -f repo="$REPO" -F issue="$ISSUE" -f query='
+              query($owner: String!, $repo: String!, $issue: Int!) {
+                repository(owner: $owner, name: $repo) {
+                  issue(number: $issue) {
+                    projectItems(first: 20) {
+                      nodes {
+                        id
+                        project { id }
+                        targetDate: fieldValueByName(name: "Target date") {
+                          ... on ProjectV2ItemFieldDateValue { date }
+                        }
+                      }
+                    }
+                  }
+                }
+              }'); then
+              echo "::warning::Não achei a issue #$ISSUE. Nada foi alterado."
+              return 0
+            fi
+
+            ITEM_ID=$(jq -r --arg p "$PROJECT_ID" '[(.data.repository.issue.projectItems.nodes // [])[] | select(.project.id == $p)][0].id // empty' <<< "$ITEM_JSON")
+            CURRENT=$(jq -r --arg p "$PROJECT_ID" '[(.data.repository.issue.projectItems.nodes // [])[] | select(.project.id == $p)][0].targetDate.date // empty' <<< "$ITEM_JSON")
+
+            if [ -z "$ITEM_ID" ]; then
+              echo "::warning::A issue #$ISSUE não está no Project. Nada foi alterado."
+              return 0
+            fi
+
+            if [ -n "$CURRENT" ]; then
+              echo "Issue #$ISSUE: Target date já preenchida ($CURRENT). Não mexo."
+              return 0
+            fi
+
+            gh api graphql -f project="$PROJECT_ID" -f item="$ITEM_ID" -f field="$FIELD_ID" -f date="$TODAY" -f query='
+              mutation($project: ID!, $item: ID!, $field: ID!, $date: Date!) {
+                updateProjectV2ItemFieldValue(input: {
+                  projectId: $project, itemId: $item, fieldId: $field,
+                  value: { date: $date }
+                }) { projectV2Item { id } }
+              }' > /dev/null
+
+            echo "Issue #$ISSUE: Target date = $TODAY"
+          }
+
+          for ISSUE in $ISSUES; do
+            set_date "$ISSUE"
+          done

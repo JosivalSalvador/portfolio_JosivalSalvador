@@ -26,8 +26,8 @@ Os códigos `UC-xx` serão usados em [`requisitos.md`](./requisitos.md) para lig
 |---|---|---|---|
 | **Visitante / Recrutador** | Primário | Não | Consultar todo o conteúdo público: projetos, perfil, certificados e currículo. |
 | **Convidado (`GUEST`)** | Primário | Sim, papel `GUEST` | Entrar no painel e inspecionar as telas em modo leitura, sem alterar nenhum dado. |
-| **Administrador (`ADMIN`)** | Primário | Sim, papel `ADMIN` | Tudo o que o convidado vê, mais a gestão completa de projetos, tecnologias, certificados e releases. |
-| **GitHub** | Secundário (sistema externo) | Requisição validada pelo sistema | Envia automaticamente os dados de novas releases por Webhook ou GitHub Action. |
+| **Administrador (`ADMIN`)** | Primário | Sim, papel `ADMIN` | Tudo o que o convidado vê, mais a gestão completa de projetos, tecnologias, certificados, releases e perfil. |
+| **GitHub** | Secundário (sistema externo) | Requisição validada pelo sistema | Envia automaticamente os dados de novas releases por Webhook. |
 
 ---
 
@@ -51,6 +51,7 @@ Os códigos `UC-xx` serão usados em [`requisitos.md`](./requisitos.md) para lig
 | UC-14 | Gerenciar certificados | Administrador | Painel de Controle | `Certificados`, `Perfil` |
 | UC-15 | Gerenciar releases (cadastro manual) | Administrador | Painel de Controle | `Releases`, `Projetos` |
 | UC-16 | Sincronizar releases do GitHub | GitHub | Central de Projetos (integração) | `Releases`, `Projetos` |
+| UC-17 | Gerenciar perfil | Administrador | Painel de Controle | `Perfil` |
 
 ```mermaid
 flowchart LR
@@ -79,6 +80,7 @@ flowchart LR
             UC13["UC-13 Gerenciar tecnologias"]
             UC14["UC-14 Gerenciar certificados"]
             UC15["UC-15 Gerenciar releases"]
+            UC17["UC-17 Gerenciar perfil"]
         end
     end
 
@@ -283,7 +285,7 @@ O visitante **não precisa de login**. O menu do portfólio mantém sempre visí
 - **Ator:** Convidado (`GUEST`) ou Administrador (`ADMIN`)
 - **Módulo:** Painel de Controle
 - **Pré-condição:** nenhuma para o convidado. O administrador precisa ter uma conta cadastrada.
-- **Pós-condição:** sessão iniciada com o papel correspondente (`ADMIN` ou `GUEST`).
+- **Pós-condição:** sessão iniciada com o papel correspondente (`ADMIN` ou `GUEST`). A sessão termina quando o usuário sai ou quando ela expira.
 
 **Fluxo principal (administrador)**
 
@@ -297,10 +299,17 @@ O visitante **não precisa de login**. O menu do portfólio mantém sempre visí
 
 - **3a.** O usuário escolhe **Entrar como convidado**. O sistema autentica a conta de papel `GUEST` e segue para o passo 5, abrindo o painel com permissão somente de leitura.
 
+**Fluxo alternativo: sair do painel**
+
+- **S1.** Em qualquer tela do painel, o usuário escolhe **Sair**.
+- **S2.** O sistema encerra a sessão e redireciona para a tela de login.
+- **S3.** Depois de sair, qualquer tentativa de abrir uma tela do painel leva ao login (exceção 1a).
+
 **Fluxos de exceção**
 
 - **4a.** Se as credenciais forem inválidas, o sistema recusa o acesso, informa que e-mail ou senha estão incorretos (sem indicar qual dos dois) e mantém o usuário na tela de login.
 - **1a.** Se alguém tentar abrir diretamente uma tela do painel sem estar autenticado, o sistema redireciona para a tela de login.
+- **1b.** Se a sessão expirar, o sistema redireciona para a tela de login na próxima ação do usuário.
 
 ---
 
@@ -313,14 +322,14 @@ O visitante **não precisa de login**. O menu do portfólio mantém sempre visí
 
 **Fluxo principal**
 
-1. O convidado navega pelas áreas do painel: projetos, tecnologias, certificados e releases.
+1. O convidado navega pelas áreas do painel: projetos, tecnologias, certificados, releases e perfil.
 2. O sistema exibe as listagens e os registros em modo leitura.
 3. O convidado abre um registro ou um formulário para ver como a edição funciona na prática.
 4. O convidado sai das telas sem alterar nada.
 
 **Fluxos de exceção**
 
-- **3a.** Se o convidado tentar criar, editar ou excluir qualquer registro, o sistema recusa a ação, informa que o acesso é somente leitura e **nenhum dado é alterado**.
+- **3a.** Se o convidado tentar criar, editar, enviar arquivo ou excluir qualquer registro, o sistema recusa a ação, informa que o acesso é somente leitura e **nenhum dado é alterado**.
 - A interface pode desabilitar ou ocultar as ações de escrita para o convidado, mas a recusa é **sempre aplicada pelo servidor**, independentemente do que a interface mostre.
 
 ---
@@ -339,14 +348,14 @@ Em todos os casos desta seção, a **pré-condição** inclui estar autenticado 
 
 1. O administrador abre **Projetos** no painel e o sistema lista os projetos existentes.
 2. O administrador escolhe **Novo projeto**.
-3. O administrador preenche: título, *slug*, resumo, descrição detalhada, notas de arquitetura, decisões de tecnologia, desafios e soluções, link do deploy, link do repositório, nome exato do repositório no GitHub, capa e se o projeto é destaque.
+3. O administrador preenche: título, *slug*, resumo, descrição detalhada, notas de arquitetura, decisões de tecnologia, desafios e soluções, link do deploy, link do repositório, nome exato do repositório no GitHub, capa (enviando uma imagem ou GIF) e se o projeto é destaque.
 4. O administrador seleciona as tecnologias utilizadas (no mínimo 1).
 5. O administrador salva. O sistema valida os dados, registra o projeto vinculado ao perfil e preenche as datas de criação e de última alteração.
 6. O sistema confirma o cadastro e o projeto passa a aparecer na vitrine (UC-01).
 
 **Fluxo alternativo: editar projeto**
 
-- **E1.** O administrador seleciona um projeto da lista e altera os campos ou as tecnologias associadas.
+- **E1.** O administrador seleciona um projeto da lista e altera os campos, as tecnologias associadas ou a capa.
 - **E2.** Ao salvar, o sistema valida os dados e atualiza o registro e a data de última alteração.
 
 **Fluxo alternativo: excluir projeto**
@@ -361,6 +370,7 @@ Em todos os casos desta seção, a **pré-condição** inclui estar autenticado 
 
 **Fluxos de exceção**
 
+- **3a.** Se o arquivo da capa tiver tipo ou tamanho não permitido, ou o envio falhar, o sistema recusa o arquivo, informa o motivo e o projeto não é salvo com ele.
 - **5a.** Se nenhuma tecnologia estiver selecionada, o sistema recusa o salvamento e solicita ao menos 1 tecnologia.
 - **5b.** Se o *slug* informado já estiver em uso por outro projeto, o sistema recusa o salvamento e solicita outro.
 - **5c.** Se algum campo obrigatório estiver vazio, o sistema recusa o salvamento e indica quais campos precisam ser preenchidos.
@@ -377,7 +387,7 @@ Em todos os casos desta seção, a **pré-condição** inclui estar autenticado 
 
 1. O administrador abre **Tecnologias** no painel e o sistema lista o catálogo.
 2. O administrador escolhe **Nova tecnologia**.
-3. O administrador informa nome, categoria (*Frontend*, *Backend*, *Banco de Dados* ou *DevOps/Ferramentas*) e ícone.
+3. O administrador informa nome, categoria (*Frontend*, *Backend*, *Banco de Dados* ou *DevOps/Ferramentas*) e ícone (enviando uma imagem).
 4. O administrador salva e o sistema registra a tecnologia, que passa a poder ser associada a projetos e a aparecer nas habilidades do perfil (UC-05).
 
 **Fluxo alternativo: editar tecnologia**
@@ -391,6 +401,7 @@ Em todos os casos desta seção, a **pré-condição** inclui estar autenticado 
 
 **Fluxos de exceção**
 
+- **3a.** Se o arquivo do ícone tiver tipo ou tamanho não permitido, ou o envio falhar, o sistema recusa o arquivo, informa o motivo e a tecnologia não é salva com ele.
 - **X2a.** Se a tecnologia estiver associada a algum projeto, o sistema recusa a exclusão e informa quais projetos a utilizam, pois todo projeto precisa ter ao menos 1 tecnologia.
 - **4a.** Se algum campo obrigatório estiver vazio, o sistema recusa o salvamento e indica o que falta.
 
@@ -406,7 +417,7 @@ Em todos os casos desta seção, a **pré-condição** inclui estar autenticado 
 
 1. O administrador abre **Certificados** no painel e o sistema lista os certificados cadastrados.
 2. O administrador escolhe **Novo certificado**.
-3. O administrador informa título, instituição emissora, categoria (*Frontend*, *Backend*, *Banco de Dados*, *DevOps/Cloud*, *Arquitetura* ou *Outros*), data de emissão, grade do curso, link de validação oficial e/ou imagem do comprovante.
+3. O administrador informa título, instituição emissora, categoria (*Frontend*, *Backend*, *Banco de Dados*, *DevOps/Cloud*, *Arquitetura* ou *Outros*), data de emissão, grade do curso, link de validação oficial e/ou imagem do comprovante (enviando um arquivo de imagem).
 4. O administrador salva. O sistema valida os dados e registra o certificado vinculado ao perfil.
 5. O certificado passa a aparecer no mural (UC-07) e nos filtros por categoria (UC-08).
 
@@ -421,6 +432,7 @@ Em todos os casos desta seção, a **pré-condição** inclui estar autenticado 
 
 **Fluxos de exceção**
 
+- **3a.** Se o arquivo do comprovante tiver tipo ou tamanho não permitido, ou o envio falhar, o sistema recusa o arquivo, informa o motivo e o certificado não é salvo com ele.
 - **4a.** Se não houver nem link de validação nem imagem do comprovante, o sistema recusa o salvamento e solicita ao menos um dos dois.
 - **4b.** Se algum campo obrigatório estiver vazio, o sistema recusa o salvamento e indica o que falta.
 
@@ -457,19 +469,47 @@ Em todos os casos desta seção, a **pré-condição** inclui estar autenticado 
 
 ---
 
+### UC-17 Gerenciar perfil
+
+- **Ator:** Administrador (`ADMIN`)
+- **Módulo:** Painel de Controle
+- **Pré-condição adicional:** o perfil existe (criado na configuração inicial do sistema).
+- **Pós-condição:** o perfil e o currículo exibidos ao público refletem a mudança.
+
+**Fluxo principal: editar perfil**
+
+1. O administrador abre **Perfil** no painel e o sistema exibe os dados atuais.
+2. O administrador altera nome completo, cargo ou título principal, biografia, especialidades, e-mail de contato e links do LinkedIn e do GitHub.
+3. O administrador salva. O sistema valida os dados e atualiza o perfil.
+4. O perfil passa a aparecer atualizado em Perfil & Currículo (UC-05).
+
+**Fluxo alternativo: atualizar o currículo**
+
+- **C1.** O administrador escolhe **Enviar currículo** e seleciona um arquivo PDF.
+- **C2.** O sistema valida o arquivo, o guarda no armazenamento externo e atualiza o link do currículo no perfil.
+- **C3.** O botão **Baixar currículo** (UC-06) passa a entregar o novo arquivo.
+
+**Fluxos de exceção**
+
+- **3a.** Se algum campo obrigatório estiver vazio ou inválido, o sistema recusa o salvamento e indica o que falta.
+- **C2a.** Se o arquivo não for um PDF, passar do tamanho permitido ou o envio falhar, o sistema recusa o arquivo, informa o motivo e o currículo anterior continua valendo.
+- O perfil não é criado nem excluído pelo painel. O convidado vê esta tela em modo leitura (UC-11).
+
+---
+
 ## 7. Caso de Uso do Sistema Externo
 
 ### UC-16 Sincronizar releases do GitHub
 
-- **Ator:** GitHub (sistema externo, via Webhook ou GitHub Action)
+- **Ator:** GitHub (sistema externo, via Webhook)
 - **Módulo:** Central de Projetos (integração)
-- **Pré-condição:** o projeto está cadastrado com o nome exato do seu repositório no GitHub, e o Webhook ou a GitHub Action está configurado nesse repositório.
+- **Pré-condição:** o projeto está cadastrado com o nome exato do seu repositório no GitHub, e o Webhook está configurado nesse repositório.
 - **Pós-condição:** a release aparece no histórico do projeto, sem intervenção do administrador.
 
 **Fluxo principal**
 
 1. Uma nova release (tag de versão) é criada no repositório do GitHub.
-2. O GitHub envia os dados da release ao sistema, por Webhook ou GitHub Action.
+2. O GitHub envia os dados da release ao sistema, por Webhook.
 3. O sistema verifica se a requisição é legítima.
 4. O sistema identifica o projeto pelo nome exato do repositório.
 5. O sistema verifica se aquela release (pelo identificador do GitHub) já foi registrada.
@@ -492,15 +532,15 @@ Exemplos de como os casos de uso se combinam no dia a dia.
 
 **Cenário 2: desenvolvedor avaliando a maturidade técnica.** Na vitrine, abre um projeto em destaque (UC-01, UC-02), lê a arquitetura, os desafios e as decisões de tecnologia (UC-03) e confere no histórico de releases como o projeto evoluiu (UC-04).
 
-**Cenário 3: curioso querendo ver o painel por dentro.** Escolhe **Entrar como convidado** (UC-10), percorre as telas de projetos, tecnologias, certificados e releases (UC-11) e tenta excluir um projeto. O sistema recusa a ação e informa que o acesso é somente leitura, e nenhum dado do autor é alterado.
+**Cenário 3: curioso querendo ver o painel por dentro.** Escolhe **Entrar como convidado** (UC-10), percorre as telas de projetos, tecnologias, certificados, releases e perfil (UC-11) e tenta excluir um projeto. O sistema recusa a ação e informa que o acesso é somente leitura, e nenhum dado do autor é alterado.
 
-**Cenário 4: administrador publicando um novo projeto.** Autentica no painel (UC-10), cadastra as tecnologias que ainda não existem (UC-13) e cria o projeto associando ao menos uma delas (UC-12). Quando cria a tag `v0.1.0` no GitHub, a release chega ao sistema sozinha (UC-16) e o administrador, se quiser, complementa o changelog manualmente (UC-15). Por fim, adiciona um certificado recém-concluído (UC-14).
+**Cenário 4: administrador publicando um novo projeto.** Autentica no painel (UC-10), cadastra as tecnologias que ainda não existem (UC-13) e cria o projeto associando ao menos uma delas (UC-12). Quando cria a tag `v0.1.0` no GitHub, a release chega ao sistema sozinha (UC-16) e o administrador, se quiser, complementa o changelog manualmente (UC-15). Por fim, adiciona um certificado recém-concluído (UC-14) e atualiza o currículo em PDF (UC-17).
 
 ---
 
 ## 9. Premissas e Pontos em Aberto
 
 1. **Entrada do convidado.** Foi assumida uma opção **Entrar como convidado** na tela de login, que autentica direto a conta `GUEST`. A alternativa seria divulgar as credenciais dessa conta para quem quiser testar o painel.
-2. **Edição do Perfil.** Seguindo o [`escopo.md`](./escopo.md), não há caso de uso para o administrador editar o perfil (biografia, especialidades, links e currículo) pelo painel.
-3. **Detalhes formais.** O que acontece com registros dependentes na exclusão, a validação das requisições do GitHub e as demais restrições técnicas serão definidos como requisitos e regras de negócio em [`requisitos.md`](./requisitos.md).
-4. **Estados vazios.** Foi assumido que listas e seções sem conteúdo são exibidas em estado vazio, sem mensagem de erro para o visitante.
+2. **Detalhes formais.** O que acontece com registros dependentes na exclusão, a validação das requisições do GitHub e as demais restrições técnicas serão definidos como requisitos e regras de negócio em [`requisitos.md`](./requisitos.md).
+3. **Estados vazios.** Foi assumido que listas e seções sem conteúdo são exibidas em estado vazio, sem mensagem de erro para o visitante.
+4. **Envio de arquivos.** Os tipos permitidos e o tamanho máximo dos arquivos enviados pelo painel serão definidos na implementação.

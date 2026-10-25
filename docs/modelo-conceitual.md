@@ -72,7 +72,7 @@ Armazena a inteligência de engenharia, a arquitetura e os detalhes de cada apli
 | `desafios_e_solucoes` | Texto longo | Maior desafio técnico enfrentado e a estratégia usada para resolvê-lo. |
 | `url_deploy` | URL | Link da aplicação rodando ao vivo. |
 | `url_repositorio` | URL | Link do código-fonte no GitHub. |
-| `github_repo_name` | Texto | Nome exato do repositório no GitHub, usado para vincular Webhooks/Actions ao projeto. |
+| `github_repo_name` | Texto | Nome exato do repositório no GitHub, usado para vincular o Webhook do GitHub ao projeto. |
 | `url_capa` | URL | Imagem ou GIF demonstrativo da interface. |
 | `destaque` | Sim/Não | Se verdadeiro, fixa o projeto no topo da vitrine. |
 | `created_at` | Data e hora | Criação do registro. |
@@ -82,7 +82,7 @@ Armazena a inteligência de engenharia, a arquitetura e os detalhes de cada apli
 
 ### 3.2 `Releases`
 
-Histórico de versões (*controlling*), gerado a partir das tags de release (iniciando em `v0.1.0`) e alimentado pelo Webhook/GitHub Action ou pelo formulário interno.
+Histórico de versões (*controlling*), gerado a partir das tags de release (iniciando em `v0.1.0`) e alimentado pelo Webhook do GitHub ou pelo formulário interno.
 
 | Atributo | Tipo | Descrição |
 |---|---|---|
@@ -302,3 +302,4 @@ erDiagram
 
 1. **Nível conceitual.** Este documento não define chaves estrangeiras, tipos físicos, tamanhos de campo nem comportamento de exclusão. Esses detalhes, as restrições de integridade referencial e as **regras de negócio** formais ficam em [`requisitos.md`](./requisitos.md) e na implementação.
 2. **`Projeto_Tecnologias`.** Aparece como elemento próprio na visão geral por fazer parte da modelagem original, mas conceitualmente é o relacionamento N:N `utiliza` entre `Projetos` e `Tecnologias`.
+3. **Arquivos fora do banco.** Imagens e PDF (capa dos projetos, ícones das tecnologias, comprovantes dos certificados e currículo) ficam num armazenamento externo. O banco guarda apenas a URL de cada arquivo, nos atributos do tipo URL.
