@@ -1,26 +1,68 @@
 import { Injectable } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto.js';
 import { UpdateUserDto } from './dto/update-user.dto.js';
+import { User } from './entities/user.entity.js';
 
 @Injectable()
 export class UsersService {
-  create(createUserDto: CreateUserDto) {
-    return 'This action adds a new user';
-  }
 
-  findAll() {
-    return `This action returns all users`;
-  }
+    private users: User[] = [];
 
-  findOne(id: number) {
-    return `This action returns a #${id} user`;
-  }
+    findAll(){
+        return {
+            message: 'This action returns all users',
+            users: this.users
+        }
+    }
 
-  update(id: number, updateUserDto: UpdateUserDto) {
-    return `This action updates a #${id} user`;
-  }
+    getUsers(page: number, limit: number){
+        const startIndex = (page - 1) * limit;
+        const endIndex = startIndex + limit;
+        const paginatedUsers = this.users.slice(startIndex, endIndex);
+        return {
+            message: `This action returns users for page ${page} with limit ${limit}`,
+            users: paginatedUsers
+        }
+    }
 
-  remove(id: number) {
-    return `This action removes a #${id} user`;
-  }
+    getUserById(id: number){
+        return {
+            message: `This action returns user with id ${id}`,
+            user: this.users.find(user => user.id === id) || null
+        }
+    }
+
+    createUser(createUserDto: CreateUserDto){
+        const newUser = {
+            id: this.users.length + 1,
+            name: createUserDto.name,
+            email: createUserDto.email
+        };
+        this.users.push(newUser);
+        return {
+            message: 'This action creates a new user',
+            user: createUserDto
+        }
+    }
+
+    updateUser(id: number, updateUserDto: UpdateUserDto){
+        const userIndex = this.users.findIndex(user => user.id === id);
+        if (userIndex !== -1) {
+            this.users[userIndex] = { ...this.users[userIndex], ...updateUserDto };
+        }
+        return {
+            message: `This action updates user with id ${id}`,
+            user: updateUserDto
+        }
+    }
+
+    deleteUser(id: number){
+        const userIndex = this.users.findIndex(user => user.id === id);
+        if (userIndex !== -1) {
+            this.users.splice(userIndex, 1);
+        }
+        return {
+            message: `This action deletes user with id ${id}`
+        }
+    }
 }
