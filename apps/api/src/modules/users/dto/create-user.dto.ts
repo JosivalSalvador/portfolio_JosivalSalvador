@@ -1,13 +1,15 @@
-import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
+// dto/create-user.dto.ts
+import { IsEmail, IsString, MinLength } from 'class-validator';
+import type { User } from '../entities/user.entity';
 
-export class CreateUserDto {
-    @IsString()
-    @IsNotEmpty()
-    name: string;
+export class CreateUserDto implements Pick<User, 'email' | 'name' | 'username'> {
+  @IsEmail()
+  email: string;
 
-    @IsEmail()
-    @IsNotEmpty()
-    email: string;
+  @IsString()
+  name: string;
 
-    
+  @IsString()
+  @MinLength(3)
+  username: string;
 }

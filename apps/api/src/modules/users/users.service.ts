@@ -1,70 +1,46 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto.js';
 import { UpdateUserDto } from './dto/update-user.dto.js';
-import { User } from './entities/user.entity.js';
+import type { User } from './entities/user.entity.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
 
 @Injectable()
 export class UsersService {
-    constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) {}
 
-    private users: User[] = [];
+  async findAll(page = 1, limit = 10): Promise<User[]> {
+    return this.prisma.db.orm.public.User
+      .orderBy((u) => u.createdAt.asc())
+      .limit(limit)
+      .offset((page - 1) * limit)
+      .all();
+  }
 
-    findAll(){
-        return {
-            message: 'This action returns all users',
-            users: this.users
-        }
-    }
+  async findOne(id: number): Promise<User> {
+    const user = await this.prisma.db.orm.public.User.first({ id });
 
-    getUsers(page: number, limit: number){
-        const startIndex = (page - 1) * limit;
-        const endIndex = startIndex + limit;
-        const paginatedUsers = this.users.slice(startIndex, endIndex);
-        return {
-            message: `This action returns users for page ${page} with limit ${limit}`,
-            users: paginatedUsers
-        }
-    }
+    if (!user) throw new NotFoundException(`User ${id} not found`);
 
-    getUserById(id: number){
-        return {
-            message: `This action returns user with id ${id}`,
-            user: this.users.find(user => user.id === id) || null
-        }
-    }
+    return user;
+  }
 
-    createUser(createUserDto: CreateUserDto){
-        const newUser = {
-            id: this.users.length + 1,
-            name: createUserDto.name,
-            email: createUserDto.email
-        };
-        this.users.push(newUser);
-        return {
-            message: 'This action creates a new user',
-            user: createUserDto
-        }
-    }
+  async create(createUserDto: CreateUserDto): Promise<User> {
+    return this.prisma.db.orm.public.User.create(createUserDto);
+  }
 
-    updateUser(id: number, updateUserDto: UpdateUserDto){
-        const userIndex = this.users.findIndex(user => user.id === id);
-        if (userIndex !== -1) {
-            this.users[userIndex] = { ...this.users[userIndex], ...updateUserDto };
-        }
-        return {
-            message: `This action updates user with id ${id}`,
-            user: updateUserDto
-        }
-    }
+  async update(id: number, updateUserDto: UpdateUserDto): Promise<User> {
+    const user = await this.prisma.db.orm.public.User
+      .where({ id })
+      .update(updateUserDto);
 
-    deleteUser(id: number){
-        const userIndex = this.users.findIndex(user => user.id === id);
-        if (userIndex !== -1) {
-            this.users.splice(userIndex, 1);
-        }
-        return {
-            message: `This action deletes user with id ${id}`
-        }
-    }
+    if (!user) throw new NotFoundException(`User ${id} not found`);
+
+    return user;
+  }
+
+  async remove(id: number): Promise<void> {
+    const deleted = await this.prisma.db.orm.public.User.where({ id }).delete();
+
+    if (!deleted) throw new NotFoundException(`User ${id} not found`);
+  }
 }

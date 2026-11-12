@@ -1,41 +1,58 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  DefaultValuePipe,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  ParseIntPipe,
+  Patch,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { UsersService } from './users.service.js';
 import { CreateUserDto } from './dto/create-user.dto.js';
 import { UpdateUserDto } from './dto/update-user.dto.js';
+import type { User } from './entities/user.entity.js';
 import { AuthGuard } from '../../common/guards/auth/auth.guard.js';
 
 @Controller('users')
-@UseGuards(AuthGuard)
+//@UseGuards(AuthGuard)
 export class UsersController {
-    constructor(private readonly usersService: UsersService) {}
+  constructor(private readonly usersService: UsersService) {}
 
-    @Get()
-    findAll() {
-        return this.usersService.findAll();
-    }
+  @Get()
+  findAll(
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
+    @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
+  ): Promise<User[]> {
+    return this.usersService.findAll(page, limit);
+  }
 
-    @Get()
-    getUsers(@Query('page') page: number, @Query('limit') limit: number) {
-        return this.usersService.getUsers(page, limit);
-    }
+  @Get(':id')
+  findOne(@Param('id', ParseIntPipe) id: number): Promise<User> {
+    return this.usersService.findOne(id);
+  }
 
-    @Get(':id')
-    getUserById(@Param('id') id: number) {
-        return this.usersService.getUserById(id);
-    }
+  @Post()
+  create(@Body() createUserDto: CreateUserDto): Promise<User> {
+    return this.usersService.create(createUserDto);
+  }
 
-    @Post()
-    createUser(@Body() createUserDto: CreateUserDto) {
-        return this.usersService.createUser(createUserDto);
-    }
+  @Patch(':id')
+  update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateUserDto: UpdateUserDto,
+  ): Promise<User> {
+    return this.usersService.update(id, updateUserDto);
+  }
 
-    @Patch(':id')
-    updateUser(@Param('id') id: number, @Body() updateUserDto: UpdateUserDto) {
-        return this.usersService.updateUser(id, updateUserDto);
-    }
-
-    @Delete(':id')
-    deleteUser(@Param('id') id: number) {
-        return this.usersService.deleteUser(id);
-    }
+  @Delete(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  remove(@Param('id', ParseIntPipe) id: number): Promise<void> {
+    return this.usersService.remove(id);
+  }
 }

@@ -6,15 +6,23 @@ import { HealthModule } from './modules/health/health.module.js';
 import { HttpExceptionFilter } from './common/filters/http-exception/http-exception.filter.js';
 import { LoggerMiddleware } from './common/middleware/logger/logger.middleware.js';
 import { LoggingInterceptor } from './common/interceptors/logging/logging.interceptor.js';
+import { RedisModule } from './redis/redis.module.js';
+import { ConfigModule } from '@nestjs/config';
+import { validate } from './config/env.validation.js';
 
 
 @Module({
   imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+      validate,
+    }),
     ThrottlerModule.forRoot({
       throttlers: [{ ttl: 60000, limit: 100 }],
     }),
     UsersModule,
     HealthModule,
+    RedisModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: ThrottlerGuard },

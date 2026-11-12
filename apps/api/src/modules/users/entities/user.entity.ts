@@ -1,11 +1,4 @@
-export class User {
-    id: number;
-    name: string;
-    email: string;
+import type { Scalars } from '@prisma/orm-postgres/family-contract/types';
+import type { Models } from '../../../prisma/contract.d';
 
-    constructor(id: number, name: string, email: string) {
-        this.id = id;
-        this.name = name;
-        this.email = email;
-    }
-}
+export type User = Scalars<Models.public_User>;
