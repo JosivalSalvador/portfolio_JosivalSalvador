@@ -2,9 +2,11 @@ import { Injectable } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto.js';
 import { UpdateUserDto } from './dto/update-user.dto.js';
 import { User } from './entities/user.entity.js';
+import { PrismaService } from '../../prisma/prisma.service.js';
 
 @Injectable()
 export class UsersService {
+    constructor(private readonly prisma: PrismaService) {}
 
     private users: User[] = [];
 
