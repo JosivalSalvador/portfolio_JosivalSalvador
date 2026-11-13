@@ -5,13 +5,15 @@ import { HealthService } from './health.service.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
 import { RedisService } from '../../redis/redis.service.js';
 
+const NIL_UUID = '00000000-0000-0000-0000-000000000000';
+
 describe('HealthService', () => {
   let service: HealthService;
   let warn: MockInstance;
 
   const first = vi.fn();
   const ping = vi.fn();
-  const prisma = { db: { orm: { public: { User: { first } } } } };
+  const prisma = { db: { orm: { public: { Usuario: { first } } } } };
   const redis = { client: { ping } };
 
   beforeEach(async () => {
@@ -59,7 +61,7 @@ describe('HealthService', () => {
   it('consulta o banco e envia um PING ao Redis', async () => {
     await service.check();
 
-    expect(first).toHaveBeenCalledWith({ id: 0 });
+    expect(first).toHaveBeenCalledWith({ id: NIL_UUID });
     expect(ping).toHaveBeenCalledTimes(1);
   });
 

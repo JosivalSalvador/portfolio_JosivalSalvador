@@ -4,12 +4,12 @@
   "target": "postgres",
   "profileHash": "3916f444a8a17ad749191acf9e08dad97d1a327b88c2f1d45d12f240296aa8b2",
   "roots": {
-    "Post": {
-      "model": "Post",
+    "perfil": {
+      "model": "Perfil",
       "namespace": "public"
     },
-    "User": {
-      "model": "User",
+    "usuarios": {
+      "model": "Usuario",
       "namespace": "public"
     }
   },
@@ -17,17 +17,17 @@
     "namespaces": {
       "public": {
         "models": {
-          "Post": {
+          "Perfil": {
             "fields": {
-              "authorId": {
+              "biografia": {
                 "nullable": false,
                 "type": {
-                  "codecId": "pg/int4@1",
+                  "codecId": "pg/text@1",
                   "kind": "scalar"
                 }
               },
-              "content": {
-                "nullable": true,
+              "cargoTitulo": {
+                "nullable": false,
                 "type": {
                   "codecId": "pg/text@1",
                   "kind": "scalar"
@@ -40,14 +40,28 @@
                   "kind": "scalar"
                 }
               },
-              "id": {
+              "emailContato": {
                 "nullable": false,
                 "type": {
-                  "codecId": "pg/int4@1",
+                  "codecId": "pg/text@1",
                   "kind": "scalar"
                 }
               },
-              "title": {
+              "especialidades": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/uuid@1",
+                  "kind": "scalar"
+                }
+              },
+              "nomeCompleto": {
                 "nullable": false,
                 "type": {
                   "codecId": "pg/text@1",
@@ -60,52 +74,87 @@
                   "codecId": "pg/timestamptz-string@1",
                   "kind": "scalar"
                 }
+              },
+              "urlCvPdf": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "urlGithub": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "urlLinkedin": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
               }
             },
             "relations": {
-              "author": {
-                "cardinality": "N:1",
-                "nullable": false,
+              "usuarios": {
+                "cardinality": "1:N",
                 "on": {
                   "localFields": [
-                    "authorId"
+                    "id"
                   ],
                   "targetFields": [
-                    "id"
+                    "perfilId"
                   ]
                 },
                 "to": {
-                  "model": "User",
+                  "model": "Usuario",
                   "namespace": "public"
                 }
               }
             },
             "storage": {
               "fields": {
-                "authorId": {
-                  "column": "authorId"
+                "biografia": {
+                  "column": "biografia"
                 },
-                "content": {
-                  "column": "content"
+                "cargoTitulo": {
+                  "column": "cargo_titulo"
                 },
                 "createdAt": {
-                  "column": "createdAt"
+                  "column": "created_at"
+                },
+                "emailContato": {
+                  "column": "email_contato"
+                },
+                "especialidades": {
+                  "column": "especialidades"
                 },
                 "id": {
                   "column": "id"
                 },
-                "title": {
-                  "column": "title"
+                "nomeCompleto": {
+                  "column": "nome_completo"
                 },
                 "updatedAt": {
-                  "column": "updatedAt"
+                  "column": "updated_at"
+                },
+                "urlCvPdf": {
+                  "column": "url_cv_pdf"
+                },
+                "urlGithub": {
+                  "column": "url_github"
+                },
+                "urlLinkedin": {
+                  "column": "url_linkedin"
                 }
               },
               "namespaceId": "public",
-              "table": "Post"
+              "table": "perfil"
             }
           },
-          "User": {
+          "Usuario": {
             "fields": {
               "createdAt": {
                 "nullable": false,
@@ -124,12 +173,29 @@
               "id": {
                 "nullable": false,
                 "type": {
-                  "codecId": "pg/int4@1",
+                  "codecId": "pg/uuid@1",
                   "kind": "scalar"
                 }
               },
-              "name": {
+              "papel": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/enum@1",
+                  "kind": "scalar",
+                  "typeParams": {
+                    "typeName": "Papel"
+                  }
+                }
+              },
+              "perfilId": {
                 "nullable": true,
+                "type": {
+                  "codecId": "pg/uuid@1",
+                  "kind": "scalar"
+                }
+              },
+              "senhaHash": {
+                "nullable": false,
                 "type": {
                   "codecId": "pg/text@1",
                   "kind": "scalar"
@@ -141,28 +207,22 @@
                   "codecId": "pg/timestamptz-string@1",
                   "kind": "scalar"
                 }
-              },
-              "username": {
-                "nullable": true,
-                "type": {
-                  "codecId": "pg/text@1",
-                  "kind": "scalar"
-                }
               }
             },
             "relations": {
-              "posts": {
-                "cardinality": "1:N",
+              "perfil": {
+                "cardinality": "N:1",
+                "nullable": true,
                 "on": {
                   "localFields": [
-                    "id"
+                    "perfilId"
                   ],
                   "targetFields": [
-                    "authorId"
+                    "id"
                   ]
                 },
                 "to": {
-                  "model": "Post",
+                  "model": "Perfil",
                   "namespace": "public"
                 }
               }
@@ -170,7 +230,7 @@
             "storage": {
               "fields": {
                 "createdAt": {
-                  "column": "createdAt"
+                  "column": "created_at"
                 },
                 "email": {
                   "column": "email"
@@ -178,18 +238,21 @@
                 "id": {
                   "column": "id"
                 },
-                "name": {
-                  "column": "name"
+                "papel": {
+                  "column": "papel"
+                },
+                "perfilId": {
+                  "column": "perfil_id"
+                },
+                "senhaHash": {
+                  "column": "senha_hash"
                 },
                 "updatedAt": {
-                  "column": "updatedAt"
-                },
-                "username": {
-                  "column": "username"
+                  "column": "updated_at"
                 }
               },
               "namespaceId": "public",
-              "table": "User"
+              "table": "usuarios"
             }
           }
         }
@@ -200,20 +263,30 @@
     "namespaces": {
       "public": {
         "entries": {
+          "native_enum": {
+            "Papel": {
+              "kind": "postgres-enum",
+              "members": [
+                "ADMIN",
+                "GUEST"
+              ],
+              "typeName": "Papel"
+            }
+          },
           "table": {
-            "Post": {
+            "perfil": {
               "columns": {
-                "authorId": {
-                  "codecId": "pg/int4@1",
-                  "dataType": "pg/int4",
-                  "nullable": false
-                },
-                "content": {
+                "biografia": {
                   "codecId": "pg/text@1",
                   "dataType": "pg/text",
-                  "nullable": true
+                  "nullable": false
                 },
-                "createdAt": {
+                "cargo_titulo": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": false
+                },
+                "created_at": {
                   "codecId": "pg/timestamptz-string@1",
                   "dataType": "pg/timestamptz",
                   "default": {
@@ -222,57 +295,53 @@
                   },
                   "nullable": false
                 },
-                "id": {
-                  "codecId": "pg/int4@1",
-                  "dataType": "pg/int4",
-                  "default": {
-                    "expression": "autoincrement()",
-                    "kind": "function"
-                  },
-                  "nullable": false
-                },
-                "title": {
+                "email_contato": {
                   "codecId": "pg/text@1",
                   "dataType": "pg/text",
                   "nullable": false
                 },
-                "updatedAt": {
+                "especialidades": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": false
+                },
+                "id": {
+                  "codecId": "pg/uuid@1",
+                  "dataType": "pg/uuid",
+                  "default": {
+                    "expression": "gen_random_uuid()",
+                    "kind": "function"
+                  },
+                  "nullable": false
+                },
+                "nome_completo": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": false
+                },
+                "updated_at": {
                   "codecId": "pg/timestamptz-string@1",
                   "dataType": "pg/timestamptz",
                   "nullable": false
+                },
+                "url_cv_pdf": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": true
+                },
+                "url_github": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": false
+                },
+                "url_linkedin": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": false
                 }
               },
-              "foreignKeys": [
-                {
-                  "index": {
-                    "name": "Post_authorId_idx_e47547ed"
-                  },
-                  "source": {
-                    "columns": [
-                      "authorId"
-                    ],
-                    "namespaceId": "public",
-                    "tableName": "Post"
-                  },
-                  "target": {
-                    "columns": [
-                      "id"
-                    ],
-                    "namespaceId": "public",
-                    "tableName": "User"
-                  }
-                }
-              ],
-              "indexes": [
-                {
-                  "columns": [
-                    "authorId"
-                  ],
-                  "name": "Post_authorId_idx_e47547ed",
-                  "prefix": "Post_authorId_idx",
-                  "unique": false
-                }
-              ],
+              "foreignKeys": [],
+              "indexes": [],
               "primaryKey": {
                 "columns": [
                   "id"
@@ -280,9 +349,9 @@
               },
               "uniques": []
             },
-            "User": {
+            "usuarios": {
               "columns": {
-                "createdAt": {
+                "created_at": {
                   "codecId": "pg/timestamptz-string@1",
                   "dataType": "pg/timestamptz",
                   "default": {
@@ -297,32 +366,76 @@
                   "nullable": false
                 },
                 "id": {
-                  "codecId": "pg/int4@1",
-                  "dataType": "pg/int4",
+                  "codecId": "pg/uuid@1",
+                  "dataType": "pg/uuid",
                   "default": {
-                    "expression": "autoincrement()",
+                    "expression": "gen_random_uuid()",
                     "kind": "function"
                   },
                   "nullable": false
                 },
-                "name": {
-                  "codecId": "pg/text@1",
-                  "dataType": "pg/text",
+                "papel": {
+                  "codecId": "pg/enum@1",
+                  "dataType": "pg/enum",
+                  "nullable": false,
+                  "typeParams": {
+                    "typeName": "Papel"
+                  },
+                  "valueSet": {
+                    "entityKind": "valueSet",
+                    "entityName": "Papel",
+                    "namespaceId": "public",
+                    "plane": "storage"
+                  }
+                },
+                "perfil_id": {
+                  "codecId": "pg/uuid@1",
+                  "dataType": "pg/uuid",
                   "nullable": true
                 },
-                "updatedAt": {
+                "senha_hash": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": false
+                },
+                "updated_at": {
                   "codecId": "pg/timestamptz-string@1",
                   "dataType": "pg/timestamptz",
                   "nullable": false
-                },
-                "username": {
-                  "codecId": "pg/text@1",
-                  "dataType": "pg/text",
-                  "nullable": true
                 }
               },
-              "foreignKeys": [],
-              "indexes": [],
+              "foreignKeys": [
+                {
+                  "index": {
+                    "name": "usuarios_perfil_id_idx_0e75ecf5"
+                  },
+                  "onDelete": "restrict",
+                  "source": {
+                    "columns": [
+                      "perfil_id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "usuarios"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "perfil"
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "columns": [
+                    "perfil_id"
+                  ],
+                  "name": "usuarios_perfil_id_idx_0e75ecf5",
+                  "prefix": "usuarios_perfil_id_idx",
+                  "unique": false
+                }
+              ],
               "primaryKey": {
                 "columns": [
                   "id"
@@ -336,16 +449,25 @@
                 }
               ]
             }
+          },
+          "valueSet": {
+            "Papel": {
+              "kind": "valueSet",
+              "values": [
+                "ADMIN",
+                "GUEST"
+              ]
+            }
           }
         },
         "id": "public",
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "a51b4833fdaffe730572670ccc27dd89af7e0726ab3de7f428d21702d687cc15"
+    "storageHash": "0265803b8f7d063b972abdc145c7780094f9532fff0a5021f157c461bdc5a622"
   },
   "execution": {
-    "executionHash": "4e88564095b5e0ba7904ffdba3c563ef916d87688c8c483c67055f71a9194f0f",
+    "executionHash": "25950376f505f87c5dfccf299e073c5c779df0fc5db88c1a28d994f2fee44ef0",
     "mutations": {
       "defaults": [
         {
@@ -358,8 +480,8 @@
             "kind": "generator"
           },
           "ref": {
-            "entry": "Post",
-            "field": "updatedAt",
+            "entry": "perfil",
+            "field": "updated_at",
             "namespace": "public"
           }
         },
@@ -373,8 +495,8 @@
             "kind": "generator"
           },
           "ref": {
-            "entry": "User",
-            "field": "updatedAt",
+            "entry": "usuarios",
+            "field": "updated_at",
             "namespace": "public"
           }
         }
