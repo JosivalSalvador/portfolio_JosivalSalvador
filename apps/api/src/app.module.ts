@@ -8,8 +8,6 @@ import { LoggingInterceptor } from './common/interceptors/logging/logging.interc
 import { RedisModule } from './redis/redis.module.js';
 import { ConfigModule } from '@nestjs/config';
 import { validate } from './config/env.validation.js';
-import { UsuariosModule } from './modules/usuarios/usuarios.module.js';
-import { PerfilModule } from './modules/perfil/perfil.module.js';
 
 
 @Module({
@@ -23,8 +21,6 @@ import { PerfilModule } from './modules/perfil/perfil.module.js';
     }),
     HealthModule,
     RedisModule,
-    UsuariosModule,
-    PerfilModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: ThrottlerGuard },

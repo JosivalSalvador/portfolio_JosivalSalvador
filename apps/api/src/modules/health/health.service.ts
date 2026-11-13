@@ -13,6 +13,9 @@ import type {
 
 const CHECK_TIMEOUT_MS = 2000;
 
+// UUID nulo: é um uuid válido para o Postgres e nunca existe como id real.
+const NIL_UUID = '00000000-0000-0000-0000-000000000000';
+
 @Injectable()
 export class HealthService {
   private readonly logger = new Logger(HealthService.name);
@@ -48,8 +51,8 @@ export class HealthService {
   }
 
   private async pingDatabase(): Promise<void> {
-    // O id 0 nunca existe: a busca só prova que o banco responde.
-    await this.prisma.db.orm.public.User.first({ id: 0 });
+    // O UUID nulo nunca existe: a busca só prova que o banco responde.
+    await this.prisma.db.orm.public.Usuario.first({ id: NIL_UUID });
   }
 
   private async pingRedis(): Promise<void> {
