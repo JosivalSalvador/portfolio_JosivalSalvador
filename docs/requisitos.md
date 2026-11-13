@@ -70,28 +70,32 @@ Este documento é o contrato técnico do projeto: tudo o que o sistema **deve fa
 | RF-22 | O sistema deve recusar credenciais inválidas e manter o usuário na tela de login. | UC-10 |
 | RF-23 | O sistema deve redirecionar para a tela de login qualquer tentativa de abrir uma tela do painel sem autenticação. | UC-10 |
 | RF-24 | O sistema deve identificar o papel do usuário (`ADMIN` ou `GUEST`) e aplicar as permissões correspondentes durante toda a sessão. | UC-10, UC-11 |
-| RF-25 | O sistema deve permitir que o `GUEST` navegue por todas as áreas do painel (projetos, tecnologias, certificados e releases) em modo leitura. | UC-11 |
-| RF-26 | O sistema deve recusar qualquer ação de criação, edição ou exclusão feita pelo `GUEST`, informando que o acesso é somente leitura. | UC-11 |
+| RF-25 | O sistema deve permitir que o `GUEST` navegue por todas as áreas do painel (perfil, projetos, tecnologias, certificados e releases) em modo leitura. | UC-11 |
+| RF-26 | O sistema deve recusar qualquer ação de criação, edição, envio de arquivo ou exclusão feita pelo `GUEST`, informando que o acesso é somente leitura. | UC-11 |
+| RF-42 | O sistema deve encerrar a sessão do usuário autenticado (`ADMIN` ou `GUEST`) quando ele escolher **Sair** ou quando a sessão expirar, e levá-lo à tela de login. | UC-10 |
 
 ### 2.5 Gestão de conteúdo (somente `ADMIN`)
 
 | ID | Requisito | Origem |
 |---|---|---|
 | RF-27 | O sistema deve permitir ao `ADMIN` listar, criar, editar e excluir **projetos**. | UC-12 |
-| RF-28 | O sistema deve permitir informar, em cada projeto: título, *slug*, resumo, descrição detalhada, notas de arquitetura, decisões de tecnologia, desafios e soluções, link do deploy, link do repositório, nome exato do repositório no GitHub, capa e destaque, além de selecionar as tecnologias utilizadas. | UC-12 |
+| RF-28 | O sistema deve permitir informar, em cada projeto: título, *slug*, resumo, descrição detalhada, notas de arquitetura, decisões de tecnologia, desafios e soluções, link do deploy, link do repositório, nome exato do repositório no GitHub, capa (enviada como arquivo, RF-44) e destaque, além de selecionar as tecnologias utilizadas. | UC-12 |
 | RF-29 | O sistema deve vincular cada projeto criado ao perfil e preencher automaticamente as datas de criação e de última alteração. | UC-12 |
 | RF-30 | O sistema deve permitir marcar e desmarcar um projeto como destaque. | UC-12 |
 | RF-31 | O sistema deve pedir confirmação antes de excluir qualquer registro, informando os registros que serão afetados. | UC-12, UC-13, UC-14, UC-15 |
-| RF-32 | O sistema deve permitir ao `ADMIN` listar, criar, editar e excluir **tecnologias**, informando nome, categoria e ícone. | UC-13 |
-| RF-33 | O sistema deve permitir ao `ADMIN` listar, criar, editar e excluir **certificados**, informando título, instituição, categoria (uma das áreas definidas), data de emissão, grade do curso, link de validação e imagem do comprovante. | UC-14 |
+| RF-32 | O sistema deve permitir ao `ADMIN` listar, criar, editar e excluir **tecnologias**, informando nome, categoria e ícone (enviado como arquivo, RF-44). | UC-13 |
+| RF-33 | O sistema deve permitir ao `ADMIN` listar, criar, editar e excluir **certificados**, informando título, instituição, categoria (uma das áreas definidas), data de emissão, grade do curso, link de validação e imagem do comprovante (enviada como arquivo, RF-44). | UC-14 |
 | RF-34 | O sistema deve permitir ao `ADMIN` listar, criar, editar e excluir **releases** no contexto de um projeto, informando versão, changelog e data de lançamento. | UC-15 |
-| RF-35 | O sistema deve validar os campos obrigatórios de todos os formulários do painel e indicar quais precisam ser preenchidos. | UC-12, UC-13, UC-14, UC-15 |
+| RF-35 | O sistema deve validar os campos obrigatórios de todos os formulários do painel e indicar quais precisam ser preenchidos. | UC-12, UC-13, UC-14, UC-15, UC-17 |
+| RF-43 | O sistema deve permitir ao `ADMIN` editar o **perfil**, informando nome completo, cargo ou título, biografia, especialidades, e-mail de contato e links do LinkedIn e do GitHub. O perfil existe desde a configuração inicial e não é criado nem excluído pelo painel. | UC-17 |
+| RF-44 | O sistema deve permitir ao `ADMIN` enviar pelo painel os arquivos do conteúdo (capa dos projetos, ícones das tecnologias, imagens de comprovante dos certificados e currículo em PDF), guardá-los em armazenamento externo e registrar o link de cada arquivo no respectivo registro. | UC-12, UC-13, UC-14, UC-17 |
+| RF-45 | O sistema deve recusar o arquivo cujo tipo ou tamanho não seja permitido, ou cujo envio falhe, informando o motivo e mantendo o arquivo anterior, quando houver. | UC-12, UC-13, UC-14, UC-17 |
 
 ### 2.6 Integração com o GitHub
 
 | ID | Requisito | Origem |
 |---|---|---|
-| RF-36 | O sistema deve receber os dados de novas releases enviados pelo GitHub, por Webhook ou GitHub Action. | UC-16 |
+| RF-36 | O sistema deve receber os dados de novas releases enviados pelo GitHub, por Webhook. | UC-16 |
 | RF-37 | O sistema deve identificar o projeto de uma release pelo nome exato do repositório no GitHub. | UC-16 |
 | RF-38 | O sistema deve registrar a release com versão, changelog, data de lançamento e identificador do GitHub. | UC-16 |
 | RF-39 | O sistema não deve registrar a mesma release do GitHub mais de uma vez. | UC-16 |
@@ -150,7 +154,7 @@ Decorrem diretamente das cardinalidades `(min, max)` de [`modelo-conceitual.md`]
 |---|---|
 | RN-21 | O conteúdo público (projetos, perfil, certificados e currículo) é visível a qualquer visitante, sem login. |
 | RN-22 | O Painel de Controle só é acessível a usuários autenticados, com papel `ADMIN` ou `GUEST`. |
-| RN-23 | Somente o papel `ADMIN` pode criar, alterar ou excluir registros. O papel `GUEST` tem acesso somente leitura. |
+| RN-23 | Somente o papel `ADMIN` pode criar, alterar, excluir registros ou enviar arquivos. O papel `GUEST` tem acesso somente leitura. |
 
 ---
 
@@ -165,7 +169,7 @@ Decorrem diretamente das cardinalidades `(min, max)` de [`modelo-conceitual.md`]
 | RNF-03 | A autorização por papel deve ser verificada **no servidor**, em toda requisição de escrita. Ocultar ou desabilitar botões na interface não substitui essa verificação. |
 | RNF-04 | Uma requisição recusada por falta de permissão não pode alterar nenhum dado. |
 | RNF-05 | A mensagem de falha de login deve ser genérica e não revelar se o e-mail ou a senha está incorreto. |
-| RNF-06 | As requisições do GitHub (Webhook ou GitHub Action) devem ser verificadas antes de processadas, por exemplo com um segredo compartilhado. |
+| RNF-06 | As requisições do Webhook do GitHub devem ser verificadas antes de processadas, por exemplo com um segredo compartilhado. |
 | RNF-07 | Em produção, toda a comunicação com o sistema deve ocorrer por conexão criptografada (HTTPS). |
 | RNF-08 | Segredos e credenciais (senha do banco, segredo do Webhook, chaves de sessão) não devem ficar no código-fonte do repositório. |
 
@@ -193,7 +197,8 @@ Decorrem diretamente das cardinalidades `(min, max)` de [`modelo-conceitual.md`]
 | ID | Requisito |
 |---|---|
 | RNF-18 | As telas públicas devem carregar com rapidez perceptível, mesmo com várias imagens de capa e de comprovantes, o que exige imagens otimizadas. |
-| RNF-19 | Todo o conteúdo do portfólio (projetos, tecnologias, certificados e releases) deve poder ser mantido pelo painel, sem necessidade de alterar o código do site. |
+| RNF-19 | Todo o conteúdo do portfólio (perfil, projetos, tecnologias, certificados e releases) e os arquivos de imagem e PDF devem poder ser mantidos pelo painel, sem necessidade de alterar o código do site. |
+| RNF-20 | Os arquivos enviados pelo painel devem ficar em armazenamento externo ao banco de dados, que guarda apenas a URL de cada arquivo. O sistema deve aceitar somente os tipos de arquivo esperados (imagens e PDF) e respeitar um tamanho máximo, definidos na implementação. |
 
 ---
 
@@ -212,21 +217,22 @@ A tabela relaciona cada caso de uso aos requisitos e regras que o sustentam.
 | UC-07 | RF-07, RF-14 | RN-02, RN-21 | RNF-14, RNF-18 |
 | UC-08 | RF-15, RF-16 | RN-21 | RNF-14 |
 | UC-09 | RF-17, RF-18, RF-19 | RN-14, RN-21 | RNF-07 |
-| UC-10 | RF-20 a RF-24 | RN-10, RN-15, RN-22 | RNF-01, RNF-02, RNF-05, RNF-07 |
+| UC-10 | RF-20 a RF-24, RF-42 | RN-10, RN-15, RN-22 | RNF-01, RNF-02, RNF-05, RNF-07 |
 | UC-11 | RF-24, RF-25, RF-26 | RN-23 | RNF-03, RNF-04 |
-| UC-12 | RF-27 a RF-31, RF-35 | RN-01, RN-04, RN-09, RN-13, RN-16, RN-17 | RNF-09 a RNF-13, RNF-19 |
-| UC-13 | RF-31, RF-32, RF-35 | RN-05, RN-16, RN-18 | RNF-09, RNF-11, RNF-19 |
-| UC-14 | RF-31, RF-33, RF-35 | RN-02, RN-14, RN-16, RN-20 | RNF-09, RNF-19 |
+| UC-12 | RF-27 a RF-31, RF-35, RF-44, RF-45 | RN-01, RN-04, RN-09, RN-13, RN-16, RN-17 | RNF-09 a RNF-13, RNF-19, RNF-20 |
+| UC-13 | RF-31, RF-32, RF-35, RF-44, RF-45 | RN-05, RN-16, RN-18 | RNF-09, RNF-11, RNF-19, RNF-20 |
+| UC-14 | RF-31, RF-33, RF-35, RF-44, RF-45 | RN-02, RN-14, RN-16, RN-20 | RNF-09, RNF-19, RNF-20 |
 | UC-15 | RF-31, RF-34, RF-35 | RN-03, RN-11, RN-16, RN-20 | RNF-09, RNF-19 |
 | UC-16 | RF-36 a RF-41 | RN-03, RN-11, RN-12 | RNF-06, RNF-08 |
+| UC-17 | RF-35, RF-43, RF-44, RF-45 | RN-16 | RNF-19, RNF-20 |
 
 ---
 
 ## 6. Premissas e Pontos em Aberto
 
-1. **Regras de exclusão (RN-17 a RN-20).** Consolidam os comportamentos implícitos nos casos de uso (por exemplo, a exclusão de um projeto removendo seu histórico de releases). São propostas a validar antes da implementação.
+1. **Regras de exclusão (RN-17 a RN-20).** Consolidam os comportamentos implícitos nos casos de uso (por exemplo, a exclusão de um projeto removendo seu histórico de releases). Foram adotadas como regras do sistema.
 2. **Metas numéricas.** Os requisitos de desempenho (RNF-18) e de segurança não definem valores como tempo máximo de carregamento ou tempo de expiração da sessão. Esses números serão definidos na implementação.
 3. **Boas práticas acrescentadas.** HTTPS (RNF-07), segredos fora do código (RNF-08) e interface responsiva (RNF-15) não constavam na ideia inicial e foram incluídos como padrão para um portfólio profissional.
-4. **Edição do Perfil.** Seguindo o [`escopo.md`](./escopo.md), não há requisito para o administrador editar o perfil (biografia, especialidades, links e currículo) pelo painel.
-5. **Entrada do convidado (RF-21).** Mantém a premissa de [`casos-de-uso.md`](./casos-de-uso.md): um botão **Entrar como convidado** que autentica direto a conta `GUEST`.
-6. **Grade do curso.** Foi assumida como opcional: o modal de detalhes a omite quando o certificado não a tem (RF-19). A obrigatoriedade final será definida na implementação (RN-16).
+4. **Entrada do convidado (RF-21).** Mantém a premissa de [`casos-de-uso.md`](./casos-de-uso.md): um botão **Entrar como convidado** que autentica direto a conta `GUEST`.
+5. **Grade do curso.** Foi adotada como opcional: o modal de detalhes a omite quando o certificado não a tem (RF-19).
+6. **Limites de upload.** O serviço de armazenamento externo, os tipos de arquivo aceitos e o tamanho máximo (RF-44, RF-45 e RNF-20) serão definidos na implementação.

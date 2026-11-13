@@ -50,6 +50,17 @@
     },
     "contract:emit": {
       "cache": false
+    },
+    "migration:plan": {
+      "cache": false
+    },
+    "db:migrate": {
+      "cache": false,
+      "env": ["DATABASE_URL"]
+    },
+    "db:verify": {
+      "cache": false,
+      "env": ["DATABASE_URL"]
     }
   }
 }

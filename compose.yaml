@@ -2,13 +2,13 @@ name: portifolio
 
 services:
   db:
-    image: postgres:18
+    image: postgres:${POSTGRES_VERSION:-18}
     environment:
       POSTGRES_USER: ${POSTGRES_USER:?defina POSTGRES_USER no .env}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?defina POSTGRES_PASSWORD no .env}
       POSTGRES_DB: ${POSTGRES_DB:?defina POSTGRES_DB no .env}
     ports:
-      - "127.0.0.1:5432:5432"
+      - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
     volumes:
       - db_data:/var/lib/postgresql
     healthcheck:
@@ -19,7 +19,7 @@ services:
       start_period: 10s
 
   redis:
-    image: redis:8
+    image: redis:${REDIS_VERSION:-8}
     command:
       - redis-server
       - --requirepass
@@ -27,7 +27,7 @@ services:
     environment:
       REDISCLI_AUTH: ${REDIS_PASSWORD}
     ports:
-      - "127.0.0.1:6379:6379"
+      - "127.0.0.1:${REDIS_PORT:-6379}:6379"
     volumes:
       - redis_data:/data
     healthcheck:
@@ -38,7 +38,7 @@ services:
       start_period: 5s
 
   pgadmin:
-    image: dpage/pgadmin4:9
+    image: dpage/pgadmin4:${PGADMIN_VERSION:-9}
     profiles: ["tools"]
     # Cria o servers.json e o pgpass (senha do banco) antes de iniciar o pgAdmin.
     entrypoint:
@@ -46,25 +46,41 @@ services:
       - -c
       - |
         cat > /tmp/servers.json <<EOF
-        {"Servers":{"1":{"Name":"portifolio","Group":"Servers","Host":"db","Port":5432,"MaintenanceDB":"${POSTGRES_DB}","Username":"${POSTGRES_USER}","SSLMode":"prefer","PassFile":"/tmp/pgpass"}}}
+        {"Servers":{"1":{"Name":"${POSTGRES_DB}","Group":"Servers","Host":"db","Port":5432,"MaintenanceDB":"${POSTGRES_DB}","Username":"${POSTGRES_USER}","SSLMode":"prefer","PassFile":"/tmp/pgpass"}}}
         EOF
         printf 'db:5432:*:%s:%s\n' '${POSTGRES_USER}' '${POSTGRES_PASSWORD}' > /tmp/pgpass
         chmod 600 /tmp/pgpass
         exec /entrypoint.sh
     environment:
-      # Modo desktop: não pede login. Estes dois valores não são usados para entrar.
-      PGADMIN_DEFAULT_EMAIL: pgadmin4@pgadmin.org
-      PGADMIN_DEFAULT_PASSWORD: pgadmin
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
       PGADMIN_CONFIG_SERVER_MODE: "False"
       PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: "False"
       PGADMIN_SERVER_JSON_FILE: /tmp/servers.json
       PGADMIN_REPLACE_SERVERS_ON_STARTUP: "True"
     ports:
-      - "127.0.0.1:5050:80"
+      - "127.0.0.1:${PGADMIN_PORT:-5050}:80"
     volumes:
       - pgadmin_data:/var/lib/pgadmin
     depends_on:
       db:
+        condition: service_healthy
+
+  redisinsight:
+    image: redis/redisinsight:${REDISINSIGHT_VERSION:-latest}
+    profiles: ["tools"]
+    environment:
+      RI_ACCEPT_TERMS_AND_CONDITIONS: "true"
+      RI_REDIS_HOST: ${RI_REDIS_HOST:-redis}
+      RI_REDIS_PORT: ${REDIS_PORT:-6379}
+      RI_REDIS_PASSWORD: ${REDIS_PASSWORD}
+      RI_REDIS_NAME: ${RI_REDIS_NAME:-portifolio}
+    ports:
+      - "127.0.0.1:${REDISINSIGHT_PORT:-5540}:5540"
+    volumes:
+      - redisinsight_data:/data
+    depends_on:
+      redis:
         condition: service_healthy
 
   api:
@@ -115,3 +131,4 @@ volumes:
   db_data:
   redis_data:
   pgadmin_data:
+  redisinsight_data:
