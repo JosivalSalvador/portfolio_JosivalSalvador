@@ -1,26 +1,84 @@
-import { Injectable } from '@nestjs/common';
-import { CreateHealthDto } from './dto/create-health.dto.js';
-import { UpdateHealthDto } from './dto/update-health.dto.js';
+import {
+  Injectable,
+  Logger,
+  ServiceUnavailableException,
+} from '@nestjs/common';
+import { PrismaService } from '../../prisma/prisma.service.js';
+import { RedisService } from '../../redis/redis.service.js';
+import type {
+  HealthReport,
+  ServiceName,
+  ServiceStatus,
+} from './entities/health.entity.js';
+
+const CHECK_TIMEOUT_MS = 2000;
 
 @Injectable()
 export class HealthService {
-  create(createHealthDto: CreateHealthDto) {
-    return 'This action adds a new health';
+  private readonly logger = new Logger(HealthService.name);
+
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly redis: RedisService,
+  ) {}
+
+  async check(): Promise<HealthReport> {
+    const [database, redis] = await Promise.all([
+      this.run('database', () => this.pingDatabase()),
+      this.run('redis', () => this.pingRedis()),
+    ]);
+
+    const services: Record<ServiceName, ServiceStatus> = { database, redis };
+    const failed = (Object.keys(services) as ServiceName[]).filter(
+      (name) => services[name] === 'down',
+    );
+    const report: HealthReport = {
+      status: failed.length > 0 ? 'error' : 'ok',
+      services,
+    };
+
+    if (failed.length > 0) {
+      throw new ServiceUnavailableException({
+        ...report,
+        message: `Serviços indisponíveis: ${failed.join(', ')}`,
+      });
+    }
+
+    return report;
   }
 
-  findAll() {
-    return `This action returns all health`;
+  private async pingDatabase(): Promise<void> {
+    // O id 0 nunca existe: a busca só prova que o banco responde.
+    await this.prisma.db.orm.public.User.first({ id: 0 });
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} health`;
+  private async pingRedis(): Promise<void> {
+    await this.redis.client.ping();
   }
 
-  update(id: number, updateHealthDto: UpdateHealthDto) {
-    return `This action updates a #${id} health`;
+  private async run(
+    name: ServiceName,
+    ping: () => Promise<void>,
+  ): Promise<ServiceStatus> {
+    try {
+      await this.withTimeout(ping());
+      return 'up';
+    } catch (error) {
+      const reason = error instanceof Error ? error.message : String(error);
+      this.logger.warn(`Health check de ${name} falhou: ${reason}`);
+      return 'down';
+    }
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} health`;
+  private withTimeout<T>(promise: Promise<T>): Promise<T> {
+    let timer: NodeJS.Timeout | undefined;
+    const timeout = new Promise<never>((_, reject) => {
+      timer = setTimeout(
+        () => reject(new Error(`timeout de ${CHECK_TIMEOUT_MS}ms`)),
+        CHECK_TIMEOUT_MS,
+      );
+    });
+
+    return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
   }
 }

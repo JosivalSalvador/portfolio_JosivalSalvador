@@ -1,5 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import { ConfigService } from '@nestjs/config';
+import { Logger } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { apiReference } from '@scalar/nestjs-api-reference';
 import { AppModule } from './app.module.js';
@@ -25,4 +26,7 @@ async function bootstrap() {
   await app.listen(config.get('PORT', { infer: true }));
 }
 
-bootstrap();
+bootstrap().catch((error: unknown) => {
+  Logger.error(error, 'Bootstrap');
+  process.exit(1);
+});

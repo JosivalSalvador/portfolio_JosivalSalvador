@@ -11,13 +11,13 @@ import {
   Patch,
   Post,
   Query,
-  UseGuards,
+//  UseGuards,
 } from '@nestjs/common';
 import { UsersService } from './users.service.js';
 import { CreateUserDto } from './dto/create-user.dto.js';
 import { UpdateUserDto } from './dto/update-user.dto.js';
 import type { User } from './entities/user.entity.js';
-import { AuthGuard } from '../../common/guards/auth/auth.guard.js';
+//import { AuthGuard } from '../../common/guards/auth/auth.guard.js';
 
 @Controller('users')
 //@UseGuards(AuthGuard)

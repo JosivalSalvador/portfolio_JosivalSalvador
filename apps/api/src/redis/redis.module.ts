@@ -1,18 +1,8 @@
 import { Module } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { CacheModule } from '@nestjs/cache-manager';
-import { createKeyv } from '@keyv/redis';
-import type { EnvironmentVariables } from '../config/env.validation.js';
+import { RedisService } from './redis.service.js';
 
 @Module({
-  imports: [
-    CacheModule.registerAsync({
-      isGlobal: true,
-      inject: [ConfigService],
-      useFactory: (config: ConfigService<EnvironmentVariables, true>) => ({
-        stores: [createKeyv(config.get('REDIS_URL', { infer: true }))],
-      }),
-    }),
-  ],
+  providers: [RedisService],
+  exports: [RedisService],
 })
 export class RedisModule {}
