@@ -15,7 +15,16 @@
     "test:debug": "turbo run test:debug",
     "test:e2e": "turbo run test:e2e",
     "deploy": "turbo run deploy",
-    "contract:emit": "turbo run contract:emit"
+    "contract:emit": "turbo run contract:emit",
+    "migration:plan": "turbo run migration:plan",
+    "db:migrate": "turbo run db:migrate",
+    "db:verify": "turbo run db:verify",
+    "docker:infra": "docker compose --profile tools up -d",
+    "docker:infra:down": "docker compose --profile tools down",
+    "docker:infra:down:clean": "docker compose --profile tools down -v",
+    "docker:up": "docker compose --profile tools --profile app up -d",
+    "docker:down": "docker compose --profile tools --profile app down",
+    "docker:down:clean": "docker compose --profile tools --profile app down -v"
   },
     "devDependencies": {
     "prettier": "3.9.6",

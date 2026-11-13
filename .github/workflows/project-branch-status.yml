@@ -2,6 +2,7 @@
 #   branch sem commits além da dev  -> Ready
 #   branch com commits além da dev  -> In Progress
 # A issue é descoberta pelo número no nome da branch (feat/3-login, 3-login).
+# Ao mover o card para frente, grava a Start date (data de hoje) se ela estiver vazia.
 # Os nomes das colunas são comparados sem diferenciar maiúsculas de minúsculas
 # (o Project usa "In progress" e "In review").
 name: Project - Status por branch
@@ -72,12 +73,16 @@ jobs:
                   field(name: "Status") {
                     ... on ProjectV2SingleSelectField { id options { id name } }
                   }
+                  startField: field(name: "Start date") {
+                    ... on ProjectV2Field { id }
+                  }
                 }
               }
             }')
 
           PROJECT_ID=$(jq -r '.data.user.projectV2.id // empty' <<< "$PROJECT_JSON")
           FIELD_ID=$(jq -r '.data.user.projectV2.field.id // empty' <<< "$PROJECT_JSON")
+          START_FIELD_ID=$(jq -r '.data.user.projectV2.startField.id // empty' <<< "$PROJECT_JSON")
 
           if [ -z "$PROJECT_ID" ] || [ -z "$FIELD_ID" ]; then
             echo "::error::Project ou campo Status não encontrado. Confira PROJECT_OWNER, PROJECT_NUMBER e o PROJECT_TOKEN."
@@ -104,6 +109,9 @@ jobs:
                       fieldValueByName(name: "Status") {
                         ... on ProjectV2ItemFieldSingleSelectValue { name }
                       }
+                      startDate: fieldValueByName(name: "Start date") {
+                        ... on ProjectV2ItemFieldDateValue { date }
+                      }
                     }
                   }
                 }
@@ -115,6 +123,7 @@ jobs:
 
           ITEM_ID=$(jq -r --arg p "$PROJECT_ID" '[(.data.repository.issue.projectItems.nodes // [])[] | select(.project.id == $p)][0].id // empty' <<< "$ITEM_JSON")
           CURRENT=$(jq -r --arg p "$PROJECT_ID" '[(.data.repository.issue.projectItems.nodes // [])[] | select(.project.id == $p)][0].fieldValueByName.name // empty' <<< "$ITEM_JSON")
+          START_CURRENT=$(jq -r --arg p "$PROJECT_ID" '[(.data.repository.issue.projectItems.nodes // [])[] | select(.project.id == $p)][0].startDate.date // empty' <<< "$ITEM_JSON")
 
           if [ -z "$ITEM_ID" ]; then
             echo "::warning::A issue #$ISSUE não está no Project. Nada foi alterado."
@@ -148,3 +157,20 @@ jobs:
             }' > /dev/null
 
           echo "Issue #$ISSUE: '${CURRENT:-sem status}' -> '$TARGET'"
+
+          # 5) Start date: só na primeira vez que o card anda
+          if [ -z "$START_FIELD_ID" ]; then
+            echo "::warning::O campo 'Start date' não existe no Project. A data não foi gravada."
+          elif [ -n "$START_CURRENT" ]; then
+            echo "Start date já preenchida ($START_CURRENT). Não mexo."
+          else
+            TODAY=$(TZ=America/Manaus date +%F)
+            gh api graphql -f project="$PROJECT_ID" -f item="$ITEM_ID" -f field="$START_FIELD_ID" -f date="$TODAY" -f query='
+              mutation($project: ID!, $item: ID!, $field: ID!, $date: Date!) {
+                updateProjectV2ItemFieldValue(input: {
+                  projectId: $project, itemId: $item, fieldId: $field,
+                  value: { date: $date }
+                }) { projectV2Item { id } }
+              }' > /dev/null
+            echo "Issue #$ISSUE: Start date = $TODAY"
+          fi
