@@ -2,11 +2,11 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { Inject, Injectable, Logger, Module } from '@nestjs/common';
 import type { MockInstance } from 'vitest';
-import { createClient } from '@keyv/redis';
+import { createClient } from '@redis/client';
 import { RedisService } from './redis.service.js';
 import { RedisModule } from './redis.module.js';
 
-vi.mock('@keyv/redis', () => ({ createClient: vi.fn() }));
+vi.mock('@redis/client', () => ({ createClient: vi.fn() }));
 
 const url = 'redis://:senha@localhost:6379';
 

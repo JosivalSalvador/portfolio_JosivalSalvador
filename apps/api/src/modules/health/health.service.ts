@@ -64,10 +64,20 @@ export class HealthService {
       await this.withTimeout(ping());
       return 'up';
     } catch (error) {
-      const reason = error instanceof Error ? error.message : String(error);
+      const reason = this.reasonOf(error);
       this.logger.warn(`Health check de ${name} falhou: ${reason}`);
       return 'down';
     }
+  }
+
+  private reasonOf(error: unknown): string {
+    if (!(error instanceof Error)) return String(error);
+    if (error.message) return error.message;
+
+    // Com localhost, o Node junta as falhas de cada endereço (::1 e 127.0.0.1)
+    // num AggregateError de message vazia: o motivo real fica em name e code.
+    const code = (error as NodeJS.ErrnoException).code;
+    return code ? `${error.name} [${code}]` : error.name;
   }
 
   private withTimeout<T>(promise: Promise<T>): Promise<T> {

@@ -5,7 +5,7 @@ import {
   type OnModuleInit,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { createClient } from '@keyv/redis';
+import { createClient } from '@redis/client';
 import type { EnvironmentVariables } from '../config/env.validation.js';
 
 @Injectable()
@@ -42,6 +42,12 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
   }
 
   private reasonOf(error: unknown): string {
-    return error instanceof Error ? error.message : String(error);
+    if (!(error instanceof Error)) return String(error);
+    if (error.message) return error.message;
+
+    // Com localhost, o Node junta as falhas de cada endereço (::1 e 127.0.0.1)
+    // num AggregateError de message vazia: o motivo real fica em name e code.
+    const code = (error as NodeJS.ErrnoException).code;
+    return code ? `${error.name} [${code}]` : error.name;
   }
 }

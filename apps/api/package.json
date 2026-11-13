@@ -26,8 +26,6 @@
     "db:verify": "prisma db verify"
   },
   "dependencies": {
-    "@keyv/redis": "^6.1.0",
-    "@nestjs/cache-manager": "^12.0.4",
     "@nestjs/common": "^12.0.1",
     "@nestjs/config": "^12.0.1",
     "@nestjs/core": "^12.0.1",
@@ -36,16 +34,15 @@
     "@nestjs/swagger": "^12.1.1",
     "@nestjs/throttler": "^6.7.1",
     "@prisma/orm-postgres": "8.0.0-rc.18",
+    "@redis/client": "^6.3.1",
     "@scalar/nestjs-api-reference": "^1.2.36",
     "@types/bcrypt": "^6.0.0",
     "bcrypt": "^6.0.0",
-    "cache-manager": "^7.2.9",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.15.1",
     "compression": "^1.8.2",
     "dotenv": "^18.0.9",
     "express-session": "^1.19.0",
-    "keyv": "^6.1.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1"
   },
