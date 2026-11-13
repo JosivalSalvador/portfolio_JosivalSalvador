@@ -1,7 +1,6 @@
 import { Module, ValidationPipe, MiddlewareConsumer } from '@nestjs/common';
 import { APP_GUARD, APP_PIPE, APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
-import { UsersModule } from './modules/users/users.module.js';
 import { HealthModule } from './modules/health/health.module.js';
 import { HttpExceptionFilter } from './common/filters/http-exception/http-exception.filter.js';
 import { LoggerMiddleware } from './common/middleware/logger/logger.middleware.js';
@@ -9,6 +8,8 @@ import { LoggingInterceptor } from './common/interceptors/logging/logging.interc
 import { RedisModule } from './redis/redis.module.js';
 import { ConfigModule } from '@nestjs/config';
 import { validate } from './config/env.validation.js';
+import { UsuariosModule } from './modules/usuarios/usuarios.module.js';
+import { PerfilModule } from './modules/perfil/perfil.module.js';
 
 
 @Module({
@@ -20,9 +21,10 @@ import { validate } from './config/env.validation.js';
     ThrottlerModule.forRoot({
       throttlers: [{ ttl: 60000, limit: 100 }],
     }),
-    UsersModule,
     HealthModule,
     RedisModule,
+    UsuariosModule,
+    PerfilModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: ThrottlerGuard },
