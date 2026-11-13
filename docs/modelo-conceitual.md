@@ -149,6 +149,8 @@ Alimenta o resumo profissional, o currículo e os canais de contato.
 | `url_linkedin` | URL | Perfil no LinkedIn. |
 | `url_github` | URL | Perfil no GitHub. |
 | `url_cv_pdf` | URL | Arquivo PDF do currículo atualizado. |
+| `created_at` | Data e hora | Criação do perfil. |
+| `updated_at` | Data e hora | Última alteração do registro. |
 
 ---
 
@@ -163,6 +165,7 @@ Gerencia a autenticação e a segurança do Painel de Controle.
 | `senha_hash` | Texto | Hash criptografado da senha (a senha em si nunca é guardada). |
 | `papel` | Lista de valores | Nível de permissão: `ADMIN` (dono do portfólio) ou `GUEST` (modo visitante/leitura). |
 | `created_at` | Data e hora | Criação da conta. |
+| `updated_at` | Data e hora | Última alteração do registro. |
 
 ---
 
