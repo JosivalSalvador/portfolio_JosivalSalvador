@@ -1,21 +1,36 @@
 // use prisma-8
 
-model User {
-  id        Int      @id @default(autoincrement())
-  email     String   @unique
-  username  String?
-  name      String?
-  posts     Post[]
-  createdAt TimestamptzString @default(now())
-  updatedAt temporal.updatedAtString()
+native_enum Papel {
+  ADMIN = "ADMIN"
+  GUEST = "GUEST"
 }
 
-model Post {
-  id        Int      @id @default(autoincrement())
-  title     String
-  content   String?
-  author    User     @relation(fields: [authorId], references: [id])
-  authorId  Int
-  createdAt TimestamptzString @default(now())
-  updatedAt temporal.updatedAtString()
+model Perfil {
+  id             Uuid                       @id @default(sql`gen_random_uuid()`)
+  nomeCompleto   String                     @map("nome_completo")
+  cargoTitulo    String                     @map("cargo_titulo")
+  biografia      String
+  especialidades String
+  emailContato   String                     @map("email_contato")
+  urlLinkedin    String                     @map("url_linkedin")
+  urlGithub      String                     @map("url_github")
+  urlCvPdf       String?                    @map("url_cv_pdf")
+  createdAt      TimestamptzString          @default(now()) @map("created_at")
+  updatedAt      temporal.updatedAtString() @map("updated_at")
+  usuarios       Usuario[]
+
+  @@map("perfil")
+}
+
+model Usuario {
+  id        Uuid                       @id @default(sql`gen_random_uuid()`)
+  email     String                     @unique
+  senhaHash String                     @map("senha_hash")
+  papel     pg.enum(Papel)
+  createdAt TimestamptzString          @default(now()) @map("created_at")
+  updatedAt temporal.updatedAtString() @map("updated_at")
+  perfilId  Uuid?                      @map("perfil_id")
+  perfil    Perfil?                    @relation(fields: [perfilId], references: [id], onDelete: Restrict)
+
+  @@map("usuarios")
 }
