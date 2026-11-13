@@ -23,7 +23,8 @@
     "contract:emit": "prisma contract emit",
     "migration:plan": "prisma migration plan",
     "db:migrate": "prisma db migrate --advance-ref db",
-    "db:verify": "prisma db verify"
+    "db:verify": "prisma db verify",
+    "db:seed": "tsx src/prisma/seed.ts"
   },
   "dependencies": {
     "@nestjs/common": "^12.0.1",
@@ -63,6 +64,7 @@
     "prisma": "8.0.0-rc.23",
     "source-map-support": "^0.5.21",
     "supertest": "^7.0.0",
+    "tsx": "^4.23.15",
     "typescript": "^6.0.2",
     "vite": "^8.0.0",
     "vitest": "^4.1.2"
